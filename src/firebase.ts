@@ -22,21 +22,28 @@ const activeFirebaseConfig = {
 
 const app = getApps().length > 0 ? getApp() : initializeApp(activeFirebaseConfig);
 
-const databaseId = activeFirebaseConfig.firestoreDatabaseId || undefined;
+const rawDbId = activeFirebaseConfig.firestoreDatabaseId;
+const isNamedDb = rawDbId && rawDbId !== '(default)' && String(rawDbId).trim() !== '';
+const databaseId = isNamedDb ? String(rawDbId).trim() : undefined;
 
 // Initialize Firestore with force long polling for rock-solid iframe/proxy/Cloud Run connectivity without connection drops
 let firestoreInstance;
 try {
-  firestoreInstance = initializeFirestore(
-    app,
-    {
-      experimentalForceLongPolling: true,
-      ignoreUndefinedProperties: true,
-    },
-    databaseId
-  );
+  firestoreInstance = databaseId
+    ? initializeFirestore(
+        app,
+        {
+          experimentalForceLongPolling: true,
+          ignoreUndefinedProperties: true,
+        },
+        databaseId
+      )
+    : initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+        ignoreUndefinedProperties: true,
+      });
 } catch {
-  firestoreInstance = getFirestore(app, databaseId);
+  firestoreInstance = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
 }
 
 export const db = firestoreInstance;
