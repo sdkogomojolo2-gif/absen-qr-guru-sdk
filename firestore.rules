@@ -1,0 +1,197 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-\\.]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Guru / PTK entity
+    function isValidGuru(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.nip is string && data.nip.size() <= 64 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             (!('position' in data) || data.position == null || (data.position is string && data.position.size() <= 100)) &&
+             (!('employmentStatus' in data) || data.employmentStatus == null || (data.employmentStatus is string && data.employmentStatus.size() <= 64)) &&
+             (!('rankGrade' in data) || data.rankGrade == null || (data.rankGrade is string && data.rankGrade.size() <= 64)) &&
+             (!('gender' in data) || data.gender == null || data.gender in ['Laki-laki', 'Perempuan', 'L', 'P', '']) &&
+             (!('phone' in data) || data.phone == null || (data.phone is string && data.phone.size() <= 64)) &&
+             (!('avatarUrl' in data) || data.avatarUrl == null || (data.avatarUrl is string && data.avatarUrl.size() <= 25000)) &&
+             (!('photo' in data) || data.photo == null || (data.photo is string && data.photo.size() <= 300000)) &&
+             (!('schoolId' in data) || data.schoolId == null || (data.schoolId is string && isValidId(data.schoolId))) &&
+             (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string && data.createdAt.size() <= 64));
+    }
+
+    // Validation for Absensi Guru entity
+    function isValidAbsensiGuru(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.guruId is string && isValidId(data.guruId) &&
+             data.guruName is string && data.guruName.size() <= 200 &&
+             data.date is string && data.date.size() <= 32 &&
+             data.time is string && data.time.size() <= 32 &&
+             (data.status in ['Hadir', 'Terlambat', 'Dinas Luar', 'Izin', 'Sakit', 'Alpa']) &&
+             (!('timeIn' in data) || data.timeIn == null || (data.timeIn is string && data.timeIn.size() <= 32)) &&
+             (!('timeOut' in data) || data.timeOut == null || (data.timeOut is string && data.timeOut.size() <= 32)) &&
+             (!('position' in data) || data.position == null || (data.position is string && data.position.size() <= 100)) &&
+             (!('employmentStatus' in data) || data.employmentStatus == null || (data.employmentStatus is string && data.employmentStatus.size() <= 64)) &&
+             (!('scannedVia' in data) || data.scannedVia == null || (data.scannedVia is string && data.scannedVia.size() <= 64)) &&
+             (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 500)) &&
+             (!('nip' in data) || data.nip == null || (data.nip is string && data.nip.size() <= 64)) &&
+             (!('schoolId' in data) || data.schoolId == null || (data.schoolId is string && isValidId(data.schoolId)));
+    }
+
+    // Validation for Izin / Dinas Luar Guru
+    function isValidIzinGuru(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.guruId is string && isValidId(data.guruId) &&
+             data.startDate is string && data.startDate.size() <= 32 &&
+             data.endDate is string && data.endDate.size() <= 32 &&
+             (data.type in ['Izin', 'Sakit', 'Dinas Luar', 'Cuti Tahunan', 'Cuti Alasan Penting', 'Dispensasi']) &&
+             (!('reason' in data) || data.reason == null || (data.reason is string && data.reason.size() <= 500)) &&
+             (!('status' in data) || data.status == null || (data.status is string && data.status.size() <= 64)) &&
+             (!('attachmentPhoto' in data) || data.attachmentPhoto == null || (data.attachmentPhoto is string && data.attachmentPhoto.size() <= 300000)) &&
+             (!('schoolId' in data) || data.schoolId == null || (data.schoolId is string && isValidId(data.schoolId)));
+    }
+
+    // ============================================
+    // NEW CLEAN DATABASE COLLECTIONS FOR GURU
+    // ============================================
+
+    // Guru & PTK Collections
+    match /guru_ptk/{guruId} {
+      allow read: if true;
+      allow create, update: if isValidId(guruId);
+      allow delete: if isValidId(guruId);
+    }
+
+    match /data_guru/{guruId} {
+      allow read: if true;
+      allow create, update: if isValidId(guruId);
+      allow delete: if isValidId(guruId);
+    }
+
+    // Absensi Guru Collection (Datang & Pulang)
+    match /absensi_guru/{recordId} {
+      allow read: if true;
+      allow create, update: if isValidId(recordId);
+      allow delete: if isValidId(recordId);
+    }
+
+    // Izin & Dinas Luar Guru Collection
+    match /izin_guru/{leaveId} {
+      allow read: if true;
+      allow create, update: if isValidId(leaveId);
+      allow delete: if isValidId(leaveId);
+    }
+
+    // Pengaturan Presensi Guru Collection
+    match /pengaturan_guru/{settingId} {
+      allow read: if true;
+      allow create, update: if isValidId(settingId);
+      allow delete: if isValidId(settingId);
+    }
+
+    // Profil Sekolah Presensi Guru Collection
+    match /sekolah_guru/{schoolId} {
+      allow read: if true;
+      allow create, update: if isValidId(schoolId);
+      allow delete: if isValidId(schoolId);
+    }
+
+    // Cloud Sync Guru Collection
+    match /cloud_sync_guru/{syncCode} {
+      allow read: if true;
+      allow create, update: if isValidId(syncCode);
+      allow delete: if isValidId(syncCode);
+    }
+
+    // ============================================
+    // FALLBACK / LEGACY COLLECTIONS
+    // ============================================
+
+    match /schools/{schoolId} {
+      allow read: if true;
+      allow create, update: if isValidId(schoolId);
+      allow delete: if isValidId(schoolId);
+    }
+
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update: if isValidId(studentId);
+      allow delete: if isValidId(studentId);
+    }
+
+    match /data_siswa/{studentId} {
+      allow read: if true;
+      allow create, update: if isValidId(studentId);
+      allow delete: if isValidId(studentId);
+    }
+
+    match /attendance/{recordId} {
+      allow read: if true;
+      allow create, update: if isValidId(recordId);
+      allow delete: if isValidId(recordId);
+    }
+
+    match /teachers/{teacherId} {
+      allow read: if true;
+      allow create, update: if isValidId(teacherId);
+      allow delete: if isValidId(teacherId);
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update: if isValidId(settingId);
+      allow delete: if isValidId(settingId);
+    }
+
+    match /cloud_sync/{syncCode} {
+      allow read: if true;
+      allow create, update: if isValidId(syncCode);
+      allow delete: if isValidId(syncCode);
+    }
+
+    match /leaves/{leaveId} {
+      allow read: if true;
+      allow create, update: if isValidId(leaveId);
+      allow delete: if isValidId(leaveId);
+    }
+
+    match /behavior_logs/{logId} {
+      allow read: if true;
+      allow create, update: if isValidId(logId);
+      allow delete: if isValidId(logId);
+    }
+
+    match /rekap_absensi_ulatan/{recapId} {
+      allow read: if true;
+      allow create, update: if isValidId(recapId);
+      allow delete: if isValidId(recapId);
+    }
+
+    match /rekap_absensi_ogomojolo/{recapId} {
+      allow read: if true;
+      allow create, update: if isValidId(recapId);
+      allow delete: if isValidId(recapId);
+    }
+
+    // Test connection doc
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

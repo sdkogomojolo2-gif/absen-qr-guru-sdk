@@ -1,0 +1,10 @@
+{
+  "name": "Presensi SDN Kecil Ogomojolo",
+  "description": "Aplikasi Progressive Web App (PWA) Sistem Presensi QR Code Guru & Tenaga Kependidikan (PTK) dengan Pemindai Kamera, ID Card Digital, Rekap Kehadiran, serta Dukungan Instalasi di HP & Laptop",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

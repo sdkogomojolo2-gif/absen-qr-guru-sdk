@@ -1,0 +1,166 @@
+{
+  "entities": {
+    "School": {
+      "title": "School",
+      "description": "Data profil instansi sekolah dalam sistem absensi guru",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID unik slug sekolah" },
+        "code": { "type": "string", "description": "Kode unik sekolah" },
+        "name": { "type": "string", "description": "Nama resmi instansi sekolah" },
+        "address": { "type": "string", "description": "Alamat lengkap sekolah" },
+        "city": { "type": "string", "description": "Kota / Kabupaten sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun ajaran aktif" },
+        "lateCutoffTime": { "type": "string", "description": "Batas jam masuk terlambat guru" },
+        "returnStartTime": { "type": "string", "description": "Jam mulai presensi pulang guru" },
+        "headmasterName": { "type": "string", "description": "Nama Kepala Sekolah" },
+        "headmasterNip": { "type": "string", "description": "NIP Kepala Sekolah" },
+        "logoUrl": { "type": "string", "description": "Logo sekolah" },
+        "contactEmail": { "type": "string", "description": "Email kontak sekolah" },
+        "contactPhone": { "type": "string", "description": "Nomor kontak sekolah" },
+        "isActive": { "type": "boolean", "description": "Status aktif sekolah" },
+        "createdAt": { "type": "string", "description": "Waktu pembuatan data" },
+        "notes": { "type": "string", "description": "Catatan sekolah" }
+      },
+      "required": ["id", "code", "name", "address", "academicYear", "lateCutoffTime", "isActive"]
+    },
+    "Guru": {
+      "title": "Guru",
+      "description": "Data identitas Pendidik dan Tenaga Kependidikan (PTK)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID unik guru" },
+        "nip": { "type": "string", "description": "NIP / NUPTK / NIK guru" },
+        "name": { "type": "string", "description": "Nama lengkap guru beserta gelar" },
+        "position": { "type": "string", "description": "Jabatan atau tugas guru" },
+        "employmentStatus": { "type": "string", "enum": ["PNS", "PPPK", "GTY", "Honorer / GTT", "Tenaga Kependidikan"], "description": "Status kepegawaian" },
+        "rankGrade": { "type": "string", "description": "Pangkat / Golongan ruang" },
+        "gender": { "type": "string", "enum": ["Laki-laki", "Perempuan"], "description": "Jenis kelamin" },
+        "schoolId": { "type": "string", "description": "ID sekolah tempat bertugas" },
+        "phone": { "type": "string", "description": "Nomor WhatsApp aktif guru" },
+        "email": { "type": "string", "description": "Alamat email guru" },
+        "avatarUrl": { "type": "string", "description": "URL avatar guru" },
+        "photo": { "type": "string", "description": "Foto profil resmi guru" },
+        "createdAt": { "type": "string", "description": "Waktu pembuatan data" }
+      },
+      "required": ["id", "nip", "name", "position", "employmentStatus", "gender", "phone"]
+    },
+    "AbsensiGuru": {
+      "title": "AbsensiGuru",
+      "description": "Catatan presensi harian guru (datang dan pulang)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID unik presensi" },
+        "guruId": { "type": "string", "description": "ID referensi guru" },
+        "nip": { "type": "string", "description": "NIP / NUPTK guru" },
+        "guruName": { "type": "string", "description": "Nama lengkap guru" },
+        "position": { "type": "string", "description": "Jabatan guru" },
+        "employmentStatus": { "type": "string", "description": "Status kepegawaian guru" },
+        "date": { "type": "string", "description": "Tanggal absensi YYYY-MM-DD" },
+        "time": { "type": "string", "description": "Jam presensi" },
+        "timeIn": { "type": "string", "description": "Jam masuk HH:mm:ss" },
+        "timeOut": { "type": "string", "description": "Jam pulang HH:mm:ss" },
+        "status": { "type": "string", "enum": ["Hadir", "Terlambat", "Dinas Luar", "Izin", "Sakit", "Alpa"], "description": "Status kehadiran guru" },
+        "note": { "type": "string", "description": "Catatan kegiatan / alasan" },
+        "schoolId": { "type": "string", "description": "ID sekolah" },
+        "scannedVia": { "type": "string", "enum": ["QR Camera", "Manual Input", "Simulator"], "description": "Metode scan" }
+      },
+      "required": ["id", "guruId", "nip", "guruName", "position", "date", "time", "status", "scannedVia"]
+    },
+    "IzinGuru": {
+      "title": "IzinGuru",
+      "description": "Data permohonan izin, dinas luar, atau cuti guru",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID permohonan izin" },
+        "guruId": { "type": "string", "description": "ID guru" },
+        "nip": { "type": "string", "description": "NIP guru" },
+        "guruName": { "type": "string", "description": "Nama guru" },
+        "position": { "type": "string", "description": "Jabatan guru" },
+        "type": { "type": "string", "enum": ["Izin", "Sakit", "Dinas Luar", "Cuti Tahunan", "Cuti Alasan Penting", "Dispensasi"], "description": "Jenis izin" },
+        "startDate": { "type": "string", "description": "Tanggal mulai YYYY-MM-DD" },
+        "endDate": { "type": "string", "description": "Tanggal selesai YYYY-MM-DD" },
+        "reason": { "type": "string", "description": "Keterangan / alasan izin" },
+        "attachmentPhoto": { "type": "string", "description": "Surat tugas / surat keterangan dokter" },
+        "createdAt": { "type": "string", "description": "Waktu dibuat" },
+        "recordedBy": { "type": "string", "description": "Pencatat izin" },
+        "status": { "type": "string", "enum": ["Disetujui", "Menunggu", "Selesai", "Dibatalkan", "Aktif"], "description": "Status izin" }
+      },
+      "required": ["id", "guruId", "guruName", "position", "type", "startDate", "endDate"]
+    },
+    "PengaturanGuru": {
+      "title": "PengaturanGuru",
+      "description": "Pengaturan jam kerja dan profil sekolah presensi guru",
+      "type": "object",
+      "properties": {
+        "lateCutoffTime": { "type": "string", "description": "Batas jam masuk guru (HH:mm)" },
+        "returnStartTime": { "type": "string", "description": "Jam mulai presensi pulang (HH:mm)" },
+        "schoolName": { "type": "string", "description": "Nama sekolah" },
+        "schoolAddress": { "type": "string", "description": "Alamat sekolah" },
+        "academicYear": { "type": "string", "description": "Tahun ajaran" },
+        "headmasterName": { "type": "string", "description": "Nama kepala sekolah" },
+        "headmasterNip": { "type": "string", "description": "NIP kepala sekolah" },
+        "schoolCity": { "type": "string", "description": "Kota sekolah" },
+        "schoolRegency": { "type": "string", "description": "Kabupaten sekolah" },
+        "schoolDepartment": { "type": "string", "description": "Dinas Pendidikan" },
+        "cardTitle": { "type": "string", "description": "Judul kartu tanda pendidik" },
+        "cardValidityText": { "type": "string", "description": "Masa berlaku kartu" }
+      },
+      "required": ["lateCutoffTime", "schoolName", "schoolAddress", "academicYear"]
+    }
+  },
+  "firestore": {
+    "/guru_ptk/{guruId}": {
+      "schema": "Guru",
+      "description": "Koleksi database baru data guru dan tenaga kependidikan"
+    },
+    "/data_guru/{guruId}": {
+      "schema": "Guru",
+      "description": "Koleksi database baru data guru dan tenaga kependidikan"
+    },
+    "/absensi_guru/{recordId}": {
+      "schema": "AbsensiGuru",
+      "description": "Koleksi database baru rekaman presensi datang & pulang guru"
+    },
+    "/izin_guru/{leaveId}": {
+      "schema": "IzinGuru",
+      "description": "Koleksi database baru perizinan dan dinas luar guru"
+    },
+    "/pengaturan_guru/{settingId}": {
+      "schema": "PengaturanGuru",
+      "description": "Koleksi database baru pengaturan jam kerja dan sekolah"
+    },
+    "/sekolah_guru/{schoolId}": {
+      "schema": "School",
+      "description": "Koleksi profil sekolah khusus presensi guru"
+    },
+    "/schools/{schoolId}": {
+      "schema": "School",
+      "description": "Koleksi sekolah fallback"
+    },
+    "/students/{studentId}": {
+      "schema": "Guru",
+      "description": "Koleksi kompatibilitas"
+    },
+    "/attendance/{recordId}": {
+      "schema": "AbsensiGuru",
+      "description": "Koleksi presensi kompatibilitas"
+    },
+    "/teachers/{teacherId}": {
+      "schema": "Guru",
+      "description": "Koleksi akun guru"
+    },
+    "/settings/{settingId}": {
+      "schema": "PengaturanGuru",
+      "description": "Pengaturan sekolah"
+    },
+    "/cloud_sync/{syncCode}": {
+      "schema": "PengaturanGuru",
+      "description": "Snapshot sync"
+    },
+    "/leaves/{leaveId}": {
+      "schema": "IzinGuru",
+      "description": "Koleksi perizinan"
+    }
+  }
+}
