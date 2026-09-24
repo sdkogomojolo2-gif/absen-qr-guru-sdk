@@ -26,7 +26,7 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
   const [pin, setPin] = useState('1234');
   const [subject, setSubject] = useState('');
   const [teacherType, setTeacherType] = useState<TeacherType>('wali_kelas');
-  const [homeroomClass, setHomeroomClass] = useState<string>('Kelas 1');
+  const [homeroomClass, setHomeroomClass] = useState<string>('Guru Kelas 1');
   const [searchQuery, setSearchQuery] = useState('');
   const [formError, setFormError] = useState('');
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
@@ -44,7 +44,7 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
       teacher.teacherType ||
       (teacher.subject?.toLowerCase().includes('kepala sekolah') ? 'kepala_sekolah' : teacher.role === 'admin' ? 'admin' : (teacher.homeroomClass ? 'wali_kelas' : 'guru_mapel'))
     );
-    setHomeroomClass(teacher.homeroomClass || 'Kelas 1');
+    setHomeroomClass(teacher.homeroomClass || 'Guru Kelas 1');
   };
 
   const handleCancelEdit = () => {
@@ -407,7 +407,7 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                     className="w-full bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 cursor-pointer"
                   >
                     {SD_CLASSES.map((cls) => (
-                      <option key={cls} value={cls}>Wali {cls}</option>
+                      <option key={cls} value={cls}>{cls}</option>
                     ))}
                   </select>
                 </div>

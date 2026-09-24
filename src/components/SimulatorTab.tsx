@@ -146,7 +146,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
               className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
             >
               <option value="Semua">Semua Jabatan</option>
-              {Array.from(new Set([...SD_CLASSES, ...students.map((s) => s.classRoom)])).sort().map((cls) => (
+              {Array.from(new Set([...SD_CLASSES, ...students.map((s) => s.classRoom)].filter(Boolean).map((c) => formatClassLabel(c)))).sort().map((cls) => (
                 <option key={cls} value={cls}>
                   {cls}
                 </option>

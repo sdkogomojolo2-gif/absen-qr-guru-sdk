@@ -122,7 +122,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
     birthPlace: '',
     birthDate: '',
     address: '',
-    classRoom: 'Kelas 1',
+    classRoom: 'Guru Kelas 1',
     gender: 'Laki-laki' as Gender,
     parentPhone: '',
     avatarUrl: MALE_BW_AVATAR,
@@ -320,7 +320,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       birthPlace: student.birthPlace || '',
       birthDate: student.birthDate || '',
       address: student.address || '',
-      classRoom: student.classRoom || 'Kelas 1',
+      classRoom: student.classRoom ? formatClassLabel(student.classRoom) : 'Guru Kelas 1',
       gender: student.gender,
       parentPhone: student.parentPhone,
       avatarUrl: student.avatarUrl || getDefaultAvatar(student.gender),
@@ -367,7 +367,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
     setIsParsingExcel(true);
     try {
-      const defaultClass = selectedClass !== 'Semua' ? selectedClass : 'Kelas 1';
+      const defaultClass = selectedClass !== 'Semua' ? selectedClass : 'Guru Kelas 1';
       const { students: parsedStudents, errors, addedCount } = await parseStudentExcelFile(file, defaultClass, students);
 
       if (parsedStudents.length === 0) {
@@ -376,7 +376,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       }
 
       if (onAddBulkStudents) {
-        onAddBulkStudents(parsedStudents);
+        onAddBulkStudents(parsedStudents.map((s) => ({ ...s, classRoom: formatClassLabel(s.classRoom) })));
       } else {
         parsedStudents.forEach((std) => {
           onAddStudent({
@@ -386,7 +386,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             birthPlace: std.birthPlace,
             birthDate: std.birthDate,
             address: std.address,
-            classRoom: std.classRoom,
+            classRoom: formatClassLabel(std.classRoom),
             gender: std.gender,
             parentPhone: std.parentPhone,
             avatarUrl: std.avatarUrl,
@@ -418,6 +418,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
     const payload = {
       ...formData,
+      classRoom: formatClassLabel(formData.classRoom),
       nip: formData.nis.trim(),
       nuptk: formData.nisn ? formData.nisn.trim() : undefined,
       nis: formData.nis.trim(),

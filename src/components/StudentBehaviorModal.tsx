@@ -646,7 +646,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     >
                       {classesList.map((cls) => (
                         <option key={cls} value={cls}>
-                          {cls === 'Semua' ? 'Semua Kelas' : formatClassLabel(cls)}
+                          {cls === 'Semua' ? 'Semua Guru / PTK' : formatClassLabel(cls)}
                         </option>
                       ))}
                     </select>
@@ -799,7 +799,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     >
                       {classesList.map((cls) => (
                         <option key={cls} value={cls}>
-                          {cls === 'Semua' ? 'Semua Kelas' : formatClassLabel(cls)}
+                          {cls === 'Semua' ? 'Semua Guru / PTK' : formatClassLabel(cls)}
                         </option>
                       ))}
                     </select>

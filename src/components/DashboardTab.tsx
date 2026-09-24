@@ -914,7 +914,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             {/* Filter Kelas */}
             <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs">
               <i className="fa-solid fa-graduation-cap text-red-700 dark:text-red-400 text-xs"></i>
-              <span className="font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">Kelas:</span>
+              <span className="font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">Jabatan/Tugas:</span>
               <select
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
@@ -922,7 +922,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               >
                 {classesList.map((cls) => (
                   <option key={cls} value={cls} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                    {cls === 'Semua' ? 'Semua Kelas' : `Kelas ${cls}`}
+                    {cls === 'Semua' ? 'Semua Guru / PTK' : formatClassLabel(cls)}
                   </option>
                 ))}
               </select>

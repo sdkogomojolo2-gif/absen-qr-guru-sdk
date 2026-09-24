@@ -12,6 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import { Student, AttendanceRecord } from '../types';
+import { formatClassLabel } from '../utils/classUtils';
 
 interface AttendanceTrendChartProps {
   students: Student[];
@@ -222,7 +223,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
               Tren Kehadiran 7 Hari Terakhir
             </h3>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-              {selectedClass === 'Semua' ? 'Semua Kelas' : `Kelas ${selectedClass}`}
+              {selectedClass === 'Semua' ? 'Semua Guru / PTK' : formatClassLabel(selectedClass)}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

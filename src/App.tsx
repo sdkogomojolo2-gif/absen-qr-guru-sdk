@@ -160,7 +160,11 @@ export default function App() {
           uniqueId = `std-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 8)}`;
         }
         seenIds.add(uniqueId);
-        return { ...s, id: uniqueId };
+        return {
+          ...s,
+          id: uniqueId,
+          classRoom: s.classRoom ? formatClassLabel(s.classRoom) : s.classRoom,
+        };
       });
 
       safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(sanitized));
@@ -548,7 +552,11 @@ export default function App() {
 
         // Update/insert from Firestore with normalized schoolId
         validFs.forEach((s) => {
-          const normalized: Student = { ...s, schoolId: s.schoolId || DEFAULT_PRIMARY_SCHOOL_ID };
+          const normalized: Student = {
+            ...s,
+            schoolId: s.schoolId || DEFAULT_PRIMARY_SCHOOL_ID,
+            classRoom: s.classRoom ? formatClassLabel(s.classRoom) : s.classRoom,
+          };
           prevMap.set(normalized.id, normalized);
         });
 
@@ -1452,6 +1460,7 @@ export default function App() {
         ...s,
         id,
         schoolId: targetSchoolId,
+        classRoom: s.classRoom ? formatClassLabel(s.classRoom) : s.classRoom,
       };
     });
 

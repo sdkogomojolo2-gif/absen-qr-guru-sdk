@@ -258,7 +258,7 @@ export const AutoAbsenteeModal: React.FC<AutoAbsenteeModalProps> = ({
                   >
                     {classesList.map((cls) => (
                       <option key={cls} value={cls}>
-                        {cls === 'Semua' ? 'Semua Kelas' : formatClassLabel(cls)}
+                        {cls === 'Semua' ? 'Semua Guru / PTK' : formatClassLabel(cls)}
                       </option>
                     ))}
                   </select>

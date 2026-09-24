@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AttendanceRecord, SystemSettings, Guru } from '../types';
-import { formatCleanNIP } from './classUtils';
+import { formatCleanNIP, formatClassLabel } from './classUtils';
 
 interface PDFReportOptions {
   records: AttendanceRecord[];
@@ -214,9 +214,14 @@ export const generateAttendancePDFReport = ({
 
   // Left column: Wali Kelas masing-masing
   const leftX = 20;
-  const waliTitle =
-    homeroomTeacher?.classLabel ||
-    (selectedClass !== 'Semua' ? `Wali Kelas ${selectedClass}` : 'Wali Kelas / Koordinator Presensi');
+  const cleanSelectedClass = formatClassLabel(selectedClass);
+  const fallbackWali =
+    selectedClass !== 'Semua'
+      ? (/^guru\s+kelas\b/i.test(cleanSelectedClass)
+          ? `Wali ${cleanSelectedClass.replace(/^guru\s*/i, '')}`
+          : cleanSelectedClass)
+      : 'Wali Kelas / Koordinator Presensi';
+  const waliTitle = homeroomTeacher?.classLabel || fallbackWali;
   const waliName = homeroomTeacher?.name?.trim() || '( ........................................ )';
   const waliNip = formatCleanNIP(homeroomTeacher?.nip);
 
@@ -509,9 +514,14 @@ export const generateMonthlyAttendancePDFReport = ({
 
   // Left column: Wali Kelas
   const leftX = 25;
-  const waliTitle =
-    homeroomTeacher?.classLabel ||
-    (selectedClass !== 'Semua' ? `Wali Kelas ${selectedClass}` : 'Wali Kelas / Koordinator Presensi');
+  const cleanSelectedClass2 = formatClassLabel(selectedClass);
+  const fallbackWali2 =
+    selectedClass !== 'Semua'
+      ? (/^guru\s+kelas\b/i.test(cleanSelectedClass2)
+          ? `Wali ${cleanSelectedClass2.replace(/^guru\s*/i, '')}`
+          : cleanSelectedClass2)
+      : 'Wali Kelas / Koordinator Presensi';
+  const waliTitle = homeroomTeacher?.classLabel || fallbackWali2;
   const waliName = homeroomTeacher?.name?.trim() || '( ........................................ )';
   const waliNip = formatCleanNIP(homeroomTeacher?.nip);
 

@@ -6,23 +6,25 @@ import { AttendanceRecord, Student, Teacher, TeacherType } from '../types';
  */
 
 export const STANDARD_SD_CLASSES = [
-  'Kelas 1',
-  'Kelas 2',
-  'Kelas 3',
-  'Kelas 4',
-  'Kelas 5',
-  'Kelas 6',
+  'Guru Kelas 1',
+  'Guru Kelas 2',
+  'Guru Kelas 3',
+  'Guru Kelas 4',
+  'Guru Kelas 5',
+  'Guru Kelas 6',
 ];
 
 /**
  * Normalizes class strings for safe comparison
- * e.g. "Kelas 1" -> "1", "kelas 1-A" -> "1-a", "1" -> "1"
+ * e.g. "Guru Kelas 1" -> "1", "Kelas 1" -> "1", "1" -> "1"
  */
 export function normalizeClass(cls?: string): string {
   if (!cls) return '';
   return cls
     .trim()
     .toLowerCase()
+    .replace(/^kelas\s+/i, '')
+    .replace(/^guru\s*kelas\s*/i, '')
     .replace(/^kelas\s*/i, '')
     .replace(/\s+/g, '');
 }
@@ -30,9 +32,8 @@ export function normalizeClass(cls?: string): string {
 /**
  * Checks if a student's class matches the teacher's homeroom class.
  * Matches:
- * - "Kelas 1" === "1" === "Kelas 1"
- * - "Kelas 1" matches student in "1", "Kelas 1", "1-A", "1-B" (if homeroom is general grade 1)
- * - "1-A" strictly matches "1-A" or "Kelas 1-A"
+ * - "Guru Kelas 1" === "Kelas 1" === "1"
+ * - "Guru Kelas 1" matches student in "1", "Kelas 1", "1-A", "1-B" (if homeroom is general grade 1)
  */
 export function isHomeroomClassMatch(studentClass?: string, homeroomClass?: string): boolean {
   if (!studentClass || !homeroomClass) return false;
@@ -50,16 +51,53 @@ export function isHomeroomClassMatch(studentClass?: string, homeroomClass?: stri
     if (stdClean.startsWith(`${hrClean}-`) || stdClean.startsWith(`${hrClean}_`)) return true;
   }
 
+  if (studentClass.toLowerCase().trim() === homeroomClass.toLowerCase().trim()) return true;
+
   return false;
 }
 
 /**
- * Formats a clean display label for a class (e.g. "Kelas 1", "Kelas 1-A")
+ * Formats a clean display label for a class / jabatan guru.
+ * User requirement: "kata kelas dihapus saja, cukup guru kelas 1, guru kelas 2, kepala sekolah dll tidak perlu pakai kelas lagi"
+ * Examples:
+ * - "Kelas Guru Bahasa Inggris" -> "Guru Bahasa Inggris"
+ * - "Kelas Guru Kelas 1" -> "Guru Kelas 1"
+ * - "Kelas Kepala Sekolah" -> "Kepala Sekolah"
+ * - "Kelas Operator Sekolah / Dapodik" -> "Operator Sekolah / Dapodik"
+ * - "Kelas 1" -> "Guru Kelas 1"
+ * - "1" -> "Guru Kelas 1"
  */
 export function formatClassLabel(className?: string): string {
-  if (!className) return 'Kelas -';
-  if (className.toLowerCase().startsWith('kelas')) return className;
-  return `Kelas ${className}`;
+  if (!className) return '-';
+  let str = className.trim();
+
+  // Strip redundant leading "Kelas " if followed by "Guru ..." (e.g. "Kelas Guru Kelas 1" -> "Guru Kelas 1")
+  if (/^kelas\s+guru\b/i.test(str)) {
+    return str.replace(/^kelas\s+/i, '');
+  }
+
+  // Strip redundant leading "Kelas " if followed by non-class roles (Kepala Sekolah, Operator, Tenaga, Pengelola, TU, dll.)
+  if (/^kelas\s+(kepala\s+sekolah|operator|tenaga|pengelola|tata\s+usaha|tu|penjaga|satpam|administrasi|dewan\s+guru|pegawai|staf|staff|ptk)/i.test(str)) {
+    return str.replace(/^kelas\s+/i, '');
+  }
+
+  // If it's "Kelas 1", "Kelas 2", etc. -> convert to "Guru Kelas 1", "Guru Kelas 2", etc.
+  const gradeMatch = str.match(/^kelas\s*([1-6](?:[-_\s][a-z0-9]+)?)$/i);
+  if (gradeMatch) {
+    return `Guru Kelas ${gradeMatch[1].toUpperCase()}`;
+  }
+
+  // If it's a plain number "1" to "6" -> convert to "Guru Kelas 1", etc.
+  if (/^[1-6]$/.test(str)) {
+    return `Guru Kelas ${str}`;
+  }
+
+  // If it starts with "Kelas " followed by any other text, strip "Kelas "
+  if (/^kelas\s+/i.test(str)) {
+    return str.replace(/^kelas\s+/i, '');
+  }
+
+  return str;
 }
 
 /**
@@ -79,6 +117,20 @@ export function formatCleanNIP(rawNip?: string): string {
 }
 
 /**
+ * Helper to produce clean homeroom title (e.g. "Wali Kelas 1" or "Kepala Sekolah")
+ */
+function getHomeroomLabel(targetClass: string): string {
+  const clean = formatClassLabel(targetClass);
+  if (/^guru\s+kelas\b/i.test(clean)) {
+    return `Wali ${clean.replace(/^guru\s*/i, '')}`;
+  }
+  if (/^kepala\s+sekolah/i.test(clean)) {
+    return 'Kepala Sekolah';
+  }
+  return clean;
+}
+
+/**
  * Finds the corresponding homeroom teacher for a class from the teachers list or active session
  */
 export function findHomeroomTeacher(
@@ -93,7 +145,7 @@ export function findHomeroomTeacher(
       return {
         name: currentTeacher.name,
         nip: formatCleanNIP(currentTeacher.nip),
-        classLabel: `Wali Kelas ${formatClassLabel(currentTeacher.homeroomClass)}`,
+        classLabel: getHomeroomLabel(currentTeacher.homeroomClass),
         isFound: true,
       };
     }
@@ -124,7 +176,7 @@ export function findHomeroomTeacher(
     return {
       name: matchedTeacher.name,
       nip: formatCleanNIP(matchedTeacher.nip),
-      classLabel: `Wali Kelas ${formatClassLabel(targetClass)}`,
+      classLabel: getHomeroomLabel(targetClass),
       isFound: true,
     };
   }
@@ -134,7 +186,7 @@ export function findHomeroomTeacher(
     return {
       name: currentTeacher.name,
       nip: formatCleanNIP(currentTeacher.nip),
-      classLabel: `Wali Kelas ${formatClassLabel(targetClass)}`,
+      classLabel: getHomeroomLabel(targetClass),
       isFound: true,
     };
   }
@@ -143,7 +195,7 @@ export function findHomeroomTeacher(
   return {
     name: '( ........................................ )',
     nip: 'NIP. ............................',
-    classLabel: `Wali Kelas ${formatClassLabel(targetClass)}`,
+    classLabel: getHomeroomLabel(targetClass),
     isFound: false,
   };
 }
