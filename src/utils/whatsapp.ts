@@ -1,4 +1,5 @@
-import { Guru, AttendanceRecord, ScheduledLeave, BehaviorLog } from '../types';
+import { Guru, AttendanceRecord, ScheduledLeave, BehaviorLog, SystemSettings } from '../types';
+import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from './scheduleUtils';
 
 /**
  * Formats Indonesian phone number into WhatsApp international format (628xxx)
@@ -21,7 +22,8 @@ export const formatPhoneNumberForWA = (phone?: string): string => {
 export const generateWAAttendanceMessage = (
   guru: Guru,
   record: AttendanceRecord,
-  schoolName: string
+  schoolName: string,
+  settings?: SystemSettings
 ): string => {
   const statusEmoji =
     record.status === 'Hadir'
@@ -34,6 +36,9 @@ export const generateWAAttendanceMessage = (
       ? 'ℹ️'
       : '⚠️';
 
+  const displayTimeIn = resolveAttendanceEntryTime(record, settings) || record.timeIn || record.time;
+  const displayTimeOut = resolveAttendanceReturnTime(record, settings) || record.timeOut;
+
   return `Yth. Bapak/Ibu *${guru.name}*
 Jabatan: *${guru.position || guru.classRoom || 'Guru / Tenaga Pendidik'}*
 
@@ -41,8 +46,8 @@ Bukti Tanda Terima Presensi Harian Guru & PTK *${schoolName}*:
 
 ${statusEmoji} *Status Kehadiran*: ${record.status.toUpperCase()}
 📅 *Tanggal*: ${record.date}
-⏰ *Jam Masuk*: ${record.timeIn || record.time} WITA/WIB
-${record.timeOut ? `🚪 *Jam Pulang*: ${record.timeOut} WITA/WIB\n` : ''}📌 *NIP/NUPTK*: ${guru.nip || guru.nis || '-'}
+⏰ *Jam Masuk*: ${displayTimeIn} WITA/WIB
+${displayTimeOut ? `🚪 *Jam Pulang*: ${displayTimeOut} WITA/WIB\n` : ''}📌 *NIP/NUPTK*: ${guru.nip || guru.nis || '-'}
 📝 *Keterangan*: ${record.note || 'Tercatat otomatis melalui QR Code'}
 
 Semangat mengabdi dan mendidik generasi penerus bangsa!
@@ -298,8 +303,9 @@ export const generateWADailySummaryMessage = (
   if (hadirList.length > 0) {
     text += `\n\n✅ *HADIR TEPAT WAKTU (${hadirList.length}):*`;
     hadirList.forEach((item, idx) => {
-      const timeIn = item.record.timeIn || item.record.time;
-      const timeOut = item.record.timeOut ? ` | Pulang: ${item.record.timeOut}` : '';
+      const timeIn = resolveAttendanceEntryTime(item.record, settings);
+      const returnTime = resolveAttendanceReturnTime(item.record, settings);
+      const timeOut = returnTime ? ` | Pulang: ${returnTime}` : '';
       text += `\n${idx + 1}. *${item.guru.name}* (${timeIn} WITA${timeOut})`;
     });
   }
@@ -307,7 +313,7 @@ export const generateWADailySummaryMessage = (
   if (terlambatList.length > 0) {
     text += `\n\n⏰ *TERLAMBAT (${terlambatList.length}):*`;
     terlambatList.forEach((item, idx) => {
-      const timeIn = item.record.timeIn || item.record.time;
+      const timeIn = resolveAttendanceEntryTime(item.record, settings);
       text += `\n${idx + 1}. *${item.guru.name}* (${timeIn} WITA) - _${item.record.note || 'Terlambat'}_`;
     });
   }

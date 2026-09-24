@@ -5,6 +5,8 @@ import {
   getFirestore,
   doc,
   getDoc,
+  persistentLocalCache,
+  persistentMultipleTabManager,
 } from 'firebase/firestore';
 import firebaseConfigDefault from '../firebase-applet-config.json';
 
@@ -15,55 +17,62 @@ const activeFirebaseConfig = {
   appId: env.VITE_FIREBASE_APP_ID || firebaseConfigDefault.appId,
   apiKey: env.VITE_FIREBASE_API_KEY || firebaseConfigDefault.apiKey,
   authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigDefault.authDomain,
-  firestoreDatabaseId: env.VITE_FIRESTORE_DATABASE_ID || (firebaseConfigDefault as any).firestoreDatabaseId,
+  firestoreDatabaseId: env.VITE_FIRESTORE_DATABASE_ID || (firebaseConfigDefault as any).firestoreDatabaseId || '(default)',
   storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || (firebaseConfigDefault as any).storageBucket,
   messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || (firebaseConfigDefault as any).messagingSenderId,
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(activeFirebaseConfig);
 
-const rawDbId = activeFirebaseConfig.firestoreDatabaseId;
-const isNamedDb = rawDbId && rawDbId !== '(default)' && String(rawDbId).trim() !== '';
-const databaseId = isNamedDb ? String(rawDbId).trim() : undefined;
+const targetDbId = activeFirebaseConfig.firestoreDatabaseId || '(default)';
 
-// Initialize Firestore with force long polling for rock-solid iframe/proxy/Cloud Run connectivity without connection drops
+// Initialize Firestore with robust auto-detect long polling and multi-tab persistent cache
 let firestoreInstance;
 try {
-  firestoreInstance = databaseId
-    ? initializeFirestore(
-        app,
-        {
-          experimentalForceLongPolling: true,
-          ignoreUndefinedProperties: true,
-        },
-        databaseId
-      )
-    : initializeFirestore(app, {
-        experimentalForceLongPolling: true,
-        ignoreUndefinedProperties: true,
-      });
+  firestoreInstance = initializeFirestore(
+    app,
+    {
+      experimentalAutoDetectLongPolling: true,
+      ignoreUndefinedProperties: true,
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    },
+    targetDbId
+  );
 } catch {
-  firestoreInstance = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+  try {
+    firestoreInstance = initializeFirestore(
+      app,
+      {
+        experimentalAutoDetectLongPolling: true,
+        ignoreUndefinedProperties: true,
+      },
+      targetDbId
+    );
+  } catch {
+    firestoreInstance = getFirestore(app, targetDbId);
+  }
 }
 
 export const db = firestoreInstance;
 export const auth = getAuth(app);
 
-// Target Database ID for e-Rapor Merdeka (iihh Beres SD Inpres 2 Ulatan)
-export const IIHH_BERES_DATABASE_ID = 'ai-studio-iihhberes2ulatan-4d8d204c-3913-4c1d-8f70-4cdb00f5a9a0';
+// Target Database ID for external e-Rapor Merdeka (empty by default; uses main database unless specified)
+export const IIHH_BERES_DATABASE_ID = '';
 
-// Storage key for user-configured IIH Beres database for SD Inpres 2 Ulatan
+// Storage key for user-configured IIH Beres database
 const LOCAL_STORAGE_IIHH_BERES_KEY = 'absensi_ulatan_iihh_beres_db_id';
 
 /**
- * Returns the active IIH Beres database ID for SD Inpres 2 Ulatan.
+ * Returns the active IIH Beres database ID if specifically configured.
  */
 export function getCustomIIHHBeresDatabaseId(): string {
   if (typeof window !== 'undefined') {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_IIHH_BERES_KEY);
-      // Clean up legacy Ogomojolo db if stored previously
-      if (saved && (saved.includes('ogomojolo') || saved.includes('db02674d'))) {
+      // Clean up legacy non-existent db IDs if stored previously
+      if (saved && (saved.includes('ogomojolo') || saved.includes('db02674d') || saved.includes('iihhberes2ulatan-4d8d204c'))) {
         localStorage.removeItem(LOCAL_STORAGE_IIHH_BERES_KEY);
       } else if (saved && saved.trim() !== '') {
         return saved.trim();
@@ -72,7 +81,7 @@ export function getCustomIIHHBeresDatabaseId(): string {
       // LocalStorage access fallback
     }
   }
-  return env.VITE_IIHH_BERES_DATABASE_ID || IIHH_BERES_DATABASE_ID;
+  return env.VITE_IIHH_BERES_DATABASE_ID || '';
 }
 
 /**
@@ -100,14 +109,14 @@ const firestoreInstancesCache = new Map<string, any>();
 let _cachedIIHHBeresInstance: any = null;
 
 /**
- * Returns the Firestore instance for IIH Beres, lazily initialized.
+ * Returns the Firestore instance for external IIH Beres, lazily initialized if configured.
  */
 export function getIIHHBeresFirestoreInstance(): any {
-  const targetDbId = getCustomIIHHBeresDatabaseId();
-  if (!targetDbId) return null;
+  const targetDb = getCustomIIHHBeresDatabaseId();
+  if (!targetDb) return null;
 
-  if (firestoreInstancesCache.has(targetDbId)) {
-    return firestoreInstancesCache.get(targetDbId);
+  if (firestoreInstancesCache.has(targetDb)) {
+    return firestoreInstancesCache.get(targetDb);
   }
 
   let instance;
@@ -115,20 +124,17 @@ export function getIIHHBeresFirestoreInstance(): any {
     instance = initializeFirestore(
       app,
       {
-        experimentalForceLongPolling: true,
+        experimentalAutoDetectLongPolling: true,
         ignoreUndefinedProperties: true,
       },
-      targetDbId
+      targetDb
     );
   } catch {
-    instance = getFirestore(app, targetDbId);
+    instance = getFirestore(app, targetDb);
   }
 
   if (instance) {
-    firestoreInstancesCache.set(targetDbId, instance);
-    if (targetDbId === IIHH_BERES_DATABASE_ID) {
-      _cachedIIHHBeresInstance = instance;
-    }
+    firestoreInstancesCache.set(targetDb, instance);
   }
   return instance;
 }
@@ -195,9 +201,13 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
  */
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
-    await getDoc(doc(db, 'test', 'connection'));
-    return true;
-  } catch {
+    const snap = await getDoc(doc(db, 'test', 'connection'));
+    return snap.exists();
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('unavailable') || msg.includes('offline') || msg.includes('Could not reach')) {
+      console.info('Firestore offline persistence is active (local cache enabled).');
+    }
     return false;
   }
 }

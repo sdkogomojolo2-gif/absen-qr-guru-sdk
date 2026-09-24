@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Guru, AttendanceStatus, AttendanceRecord, Teacher } from '../types';
+import { Guru, AttendanceStatus, AttendanceRecord, Teacher, SystemSettings } from '../types';
+import { getDayScheduleForDate, getScheduledEntryTimeForDate } from '../utils/scheduleUtils';
 
 interface RetroactiveAttendanceModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface RetroactiveAttendanceModalProps {
   onSaveAttendance: (record: AttendanceRecord) => void;
   schoolId?: string;
   existingRecord?: AttendanceRecord | null;
+  settings?: SystemSettings;
 }
 
 export const RetroactiveAttendanceModal: React.FC<RetroactiveAttendanceModalProps> = ({
@@ -27,6 +29,7 @@ export const RetroactiveAttendanceModal: React.FC<RetroactiveAttendanceModalProp
   onSaveAttendance,
   schoolId,
   existingRecord,
+  settings,
 }) => {
   const effectiveInitialDate = selectedDate || initialDate;
 
@@ -75,19 +78,23 @@ export const RetroactiveAttendanceModal: React.FC<RetroactiveAttendanceModalProp
 
       setTeacherId(targetTeacherId);
 
+      const schedule = getDayScheduleForDate(initDate, settings);
+      const defaultTimeIn = getScheduledEntryTimeForDate(initDate, settings);
+      const defaultTimeOut = schedule.returnStartTime || '14:00';
+
       if (existingRecord) {
         setStatus(existingRecord.status || 'Hadir');
-        setTimeIn(existingRecord.timeIn || existingRecord.time || '07:00');
-        setTimeOut(existingRecord.timeOut || '14:00');
+        setTimeIn(existingRecord.timeIn || existingRecord.time || defaultTimeIn);
+        setTimeOut(existingRecord.timeOut || defaultTimeOut);
         setNote(existingRecord.note || '');
       } else {
         setStatus('Hadir');
-        setTimeIn('07:00');
-        setTimeOut('14:00');
+        setTimeIn(defaultTimeIn);
+        setTimeOut(defaultTimeOut);
         setNote('');
       }
     }
-  }, [isOpen, effectiveInitialDate, preselectedTeacherId, initialTeacherId, existingRecord]);
+  }, [isOpen, effectiveInitialDate, preselectedTeacherId, initialTeacherId, existingRecord, settings]);
 
   if (!isOpen) return null;
 

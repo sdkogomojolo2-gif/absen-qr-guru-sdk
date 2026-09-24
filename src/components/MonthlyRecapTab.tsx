@@ -8,6 +8,7 @@ import { filterAndSortTeachers } from '../utils/statusUtils';
 import { OfficialReportKop } from './OfficialReportKop';
 import { OfficialSignaturesBlock } from './OfficialSignaturesBlock';
 import { LogoSettingsModal } from './LogoSettingsModal';
+import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from '../utils/scheduleUtils';
 
 interface MonthlyRecapTabProps {
   teachers: Guru[];
@@ -606,7 +607,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
                             className="text-center border-r border-b border-slate-200 px-0.5 py-1 align-middle cursor-pointer hover:bg-amber-100/70 transition-colors group relative"
                             onClick={() => handleCellClick(teacher, day)}
                             title={`${day.dateStr} - ${teacher.name}: ${
-                              record ? `${record.status} (${record.timeIn || record.time})` : 'Klik untuk input presensi'
+                              record ? `${record.status} (${resolveAttendanceEntryTime(record, settings)})` : 'Klik untuk input presensi'
                             }`}
                           >
                             {record ? (
@@ -676,7 +677,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
                             r.date === day.dateStr
                         );
 
-                        const timeDisplay = record?.timeIn || record?.time;
+                        const timeDisplay = record ? resolveAttendanceEntryTime(record, settings) : '';
 
                         return (
                           <td
@@ -748,9 +749,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
                             r.date === day.dateStr
                         );
 
-                        // Default checkout display if attended
-                        const timeOutDisplay =
-                          record?.timeOut || (record?.status === 'Hadir' ? '12.00' : '');
+                        const timeOutDisplay = record ? resolveAttendanceReturnTime(record, settings) : '';
 
                         return (
                           <td
@@ -791,6 +790,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
         }}
         existingRecord={retroExistingRecord}
         schoolId={settings.schoolId}
+        settings={settings}
       />
 
       {/* Holiday / Tanggal Merah Management Modal */}

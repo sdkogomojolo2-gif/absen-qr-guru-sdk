@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { Student } from '../types';
 import { sortTeachersByStatus, normalizeEmploymentStatus } from './statusUtils';
+import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from './scheduleUtils';
 
 /**
  * Downloads a true Excel (.xlsx) template for bulk student import
@@ -365,7 +366,8 @@ export const exportOfficialMonthlyRecapExcel = ({
             (r.guruId === teacher.id || r.studentId === teacher.id || (r.nip && teacher.nip && r.nip === teacher.nip)) &&
             r.date === d.dateStr
         );
-        r2.push(rec?.timeIn || rec?.time ? (rec.timeIn || rec.time).replace(':', '.') : '');
+        const entryTime = rec ? resolveAttendanceEntryTime(rec, settings) : '';
+        r2.push(entryTime ? entryTime.replace(':', '.') : '');
       }
     });
     r2.push('');
@@ -399,7 +401,7 @@ export const exportOfficialMonthlyRecapExcel = ({
             (r.guruId === teacher.id || r.studentId === teacher.id || (r.nip && teacher.nip && r.nip === teacher.nip)) &&
             r.date === d.dateStr
         );
-        const outTime = rec?.timeOut || (rec?.status === 'Hadir' ? '12.00' : '');
+        const outTime = rec ? resolveAttendanceReturnTime(rec, settings) : '';
         r4.push(outTime ? outTime.replace(':', '.') : '');
       }
     });

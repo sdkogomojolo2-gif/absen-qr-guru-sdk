@@ -28,6 +28,7 @@ export const DEFAULT_SETTINGS: SystemSettings = {
   schoolId: DEFAULT_PRIMARY_SCHOOL_ID,
   lateCutoffTime: '07:15',
   returnStartTime: '14:00',
+  entryTimeMode: 'cutoff', // Default: Sesuai batas jam masuk (Senin-Kamis 07:15, Jumat 07:00)
   dailySchedules: DEFAULT_DAILY_SCHEDULES,
   enablePhotoCapture: true,
   autoCheckOutWithIn: true,

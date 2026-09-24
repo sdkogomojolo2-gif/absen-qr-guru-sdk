@@ -52,6 +52,9 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
   const [dailySchedules, setDailySchedules] = useState<{ [dayIndex: number]: WorkDaySchedule }>(
     settings.dailySchedules || DEFAULT_DAILY_SCHEDULES
   );
+  const [entryTimeMode, setEntryTimeMode] = useState<'cutoff' | 'entry' | 'realtime'>(
+    settings.entryTimeMode || 'cutoff'
+  );
 
   // Photo Evidence & WhatsApp Automation
   const [enablePhotoCapture, setEnablePhotoCapture] = useState<boolean>(
@@ -190,6 +193,7 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
       schoolCity: schoolCity.trim() || 'Jakarta',
       academicYear: academicYear.trim() || '2025/2026',
       lateCutoffTime,
+      entryTimeMode,
       dailySchedules,
       enablePhotoCapture,
       autoCheckOutWithIn,
@@ -552,6 +556,97 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
                 <p className="text-[10px] text-slate-400 leading-tight">
                   Centang opsi 6 Hari Kerja jika sekolah melaksanakan KBM di hari Sabtu.
                 </p>
+              </div>
+            </div>
+
+            {/* Pengaturan Jam Masuk di Rekapan & Dashboard (Sesuai Permintaan User) */}
+            <div className="bg-white border border-amber-300 rounded-xl p-3.5 shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold">
+                    <i className="fa-solid fa-clock"></i>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-800">
+                      Format Pengisian Jam Masuk di Rekap & Dashboard
+                    </h5>
+                    <p className="text-[10px] text-slate-500">
+                      Pilih bagaimana jam masuk ditampilkan pada tabel rekapan, cetak PDF/Excel, dan riwayat presensi.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  {entryTimeMode === 'cutoff'
+                    ? 'Batas Jam Terjadwal (07:15 / 07:00)'
+                    : entryTimeMode === 'entry'
+                    ? 'Jam Jadwal Standar (07:00)'
+                    : 'Realtime Jam Scan'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEntryTimeMode('cutoff')}
+                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                    entryTimeMode === 'cutoff'
+                      ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 text-indigo-950 font-bold'
+                      : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="font-extrabold flex items-center gap-1.5">
+                      <i className={`fa-solid ${entryTimeMode === 'cutoff' ? 'fa-circle-check text-indigo-600' : 'fa-circle text-slate-300'} text-[10px]`}></i>
+                      Sesuai Batas Jam
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">
+                      Aktif
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-normal leading-relaxed">
+                    Jam masuk diisi sesuai batas toleransi: <strong>07:15</strong> (Senin-Kamis) & <strong>07:00</strong> (Jumat).
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEntryTimeMode('entry')}
+                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                    entryTimeMode === 'entry'
+                      ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 text-indigo-950 font-bold'
+                      : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="font-extrabold flex items-center gap-1.5">
+                      <i className={`fa-solid ${entryTimeMode === 'entry' ? 'fa-circle-check text-indigo-600' : 'fa-circle text-slate-300'} text-[10px]`}></i>
+                      Jam Masuk Jadwal
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-normal leading-relaxed">
+                    Jam masuk selalu terisi jam mulai jadwal kerja: <strong>07:00</strong>.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEntryTimeMode('realtime')}
+                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                    entryTimeMode === 'realtime'
+                      ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 text-indigo-950 font-bold'
+                      : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="font-extrabold flex items-center gap-1.5">
+                      <i className={`fa-solid ${entryTimeMode === 'realtime' ? 'fa-circle-check text-indigo-600' : 'fa-circle text-slate-300'} text-[10px]`}></i>
+                      Realtime Detik Scan
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-normal leading-relaxed">
+                    Mengisi waktu aktual saat kamera/QR dipindai (contoh: 10:53:52).
+                  </p>
+                </button>
               </div>
             </div>
           </div>

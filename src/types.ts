@@ -71,9 +71,10 @@ export interface AbsensiGuru {
   position?: string;
   employmentStatus?: string;
   date: string; // YYYY-MM-DD
-  time: string; // Jam Masuk (HH:mm:ss)
-  timeIn?: string; // Jam Masuk (HH:mm:ss)
-  timeOut?: string; // Jam Pulang (HH:mm:ss)
+  time: string; // Jam Masuk (HH:mm:ss atau HH:mm resmi)
+  timeIn?: string; // Jam Masuk (HH:mm:ss atau HH:mm resmi)
+  timeOut?: string; // Jam Pulang (HH:mm:ss atau HH:mm resmi)
+  realtimeScanTime?: string; // Waktu asli scanner kamera/simulator (audit)
   status: AttendanceStatus;
   note?: string; // Keterangan tugas / alasan
   scannedVia: 'QR Camera' | 'Manual Input' | 'Simulator';
@@ -120,6 +121,7 @@ export interface SystemSettings {
   schoolId?: string;
   lateCutoffTime: string; // e.g. "07:15"
   returnStartTime?: string; // e.g. "14:00"
+  entryTimeMode?: 'cutoff' | 'entry' | 'realtime'; // Mode jam masuk di rekap & dashboard: 'cutoff' (batas jam: 07:15/07:00), 'entry' (jam jadwal: 07:00), 'realtime' (waktu scan)
   dailySchedules?: { [dayIndex: number]: WorkDaySchedule }; // Jadwal spesifik per hari kerja (Senin-Kamis, Jumat, Sabtu)
   enablePhotoCapture?: boolean; // Ambil foto bukti otomatis saat scan QR (default: true)
   autoCheckOutWithIn?: boolean; // Otomatis isi/centang absen pulang bersamaan saat absen pagi 1 kali (default: false/true)

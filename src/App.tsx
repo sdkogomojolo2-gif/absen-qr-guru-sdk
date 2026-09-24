@@ -13,7 +13,7 @@ import {
   School,
 } from './types';
 import { formatClassLabel } from './utils/classUtils';
-import { calculateAttendanceStatusForDate, getDayScheduleForDate } from './utils/scheduleUtils';
+import { calculateAttendanceStatusForDate, getDayScheduleForDate, getScheduledEntryTimeForDate } from './utils/scheduleUtils';
 import {
   INITIAL_STUDENTS,
   INITIAL_TEACHERS,
@@ -958,6 +958,13 @@ export default function App() {
       const daySchedule = getDayScheduleForDate(currentDate, settings);
       const autoReturnTime = isAutoCheckOut ? (daySchedule.returnStartTime || '14:00') : undefined;
 
+      // Sesuai permintaan: Jam masuk diisi sesuai jadwal & batas jam (bukan realtime detik scan)
+      const entryTimeMode = settings?.entryTimeMode || 'cutoff';
+      const scheduledEntryTime = getScheduledEntryTimeForDate(currentDate, settings, entryTimeMode);
+      const recordedTimeIn = entryTimeMode === 'realtime'
+        ? timeStr
+        : (status === 'Terlambat' ? timeStr : scheduledEntryTime);
+
       const newRecord: AttendanceRecord = {
         id: `att-${Date.now()}`,
         schoolId: currentSchoolId,
@@ -968,8 +975,9 @@ export default function App() {
         studentName: student.name,
         classRoom: student.classRoom,
         date: currentDate,
-        time: timeStr,
-        timeIn: timeStr,
+        time: recordedTimeIn,
+        timeIn: recordedTimeIn,
+        realtimeScanTime: timeStr,
         timeOut: autoReturnTime,
         status,
         scannedVia,
@@ -998,13 +1006,13 @@ export default function App() {
       if (isAutoCheckOut) {
         addToast(
           'Presensi Lengkap 1x Scan',
-          `[Lengkap] ${student.name} berhasil tercatat masuk (${timeStr} WITA) & langsung tercentang lengkap hingga jam pulang (${autoReturnTime} WITA).`,
+          `[Lengkap] ${student.name} berhasil tercatat masuk (${recordedTimeIn} WITA) & langsung tercentang lengkap hingga jam pulang (${autoReturnTime} WITA).`,
           'success'
         );
       } else if (status === 'Hadir') {
         addToast(
           'Presensi Masuk Berhasil',
-          `[Hadir] ${student.name} - ${currentDate} ${timeStr} WITA (Tepat Waktu)`,
+          `[Hadir] ${student.name} - ${currentDate} ${recordedTimeIn} WITA (Tepat Waktu)`,
           'success'
         );
       } else {
@@ -1813,6 +1821,7 @@ export default function App() {
               handleUpdateAttendanceRecord(record);
             }}
             schoolId={settings.schoolId}
+            settings={settings}
           />
         )}
 

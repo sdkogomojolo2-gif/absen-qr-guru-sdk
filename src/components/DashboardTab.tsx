@@ -4,6 +4,7 @@ import { openWhatsAppNotification } from '../utils/whatsapp';
 import { generateAttendancePDFReport, generateMonthlyAttendancePDFReport } from '../utils/pdf';
 import { AttendanceTrendChart } from './AttendanceTrendChart';
 import { isHomeroomClassMatch, formatClassLabel, findHomeroomTeacher, resolveRecordTeacher } from '../utils/classUtils';
+import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from '../utils/scheduleUtils';
 import { AutoAbsenteeModal } from './AutoAbsenteeModal';
 import { ScheduledLeaveModal } from './ScheduledLeaveModal';
 import { StudentBehaviorModal } from './StudentBehaviorModal';
@@ -1263,16 +1264,21 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                         {filterMode !== 'daily' && (
                           <td className="py-3 px-4 font-mono font-semibold text-slate-600 dark:text-slate-400">{record.date}</td>
                         )}
-                        <td className="py-3 px-4 font-mono font-bold text-indigo-700 dark:text-indigo-400">{record.time} WITA</td>
+                        <td className="py-3 px-4 font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                          {resolveAttendanceEntryTime(record, settings)} WITA
+                        </td>
                         <td className="py-3 px-4 font-mono font-semibold">
-                          {record.timeOut ? (
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                              <i className="fa-solid fa-circle-check text-[10px]"></i>
-                              <span>{record.timeOut} WITA</span>
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-[11px] italic">Belum Pulang</span>
-                          )}
+                          {(() => {
+                            const returnTime = resolveAttendanceReturnTime(record, settings);
+                            return returnTime ? (
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <i className="fa-solid fa-circle-check text-[10px]"></i>
+                                <span>{returnTime} WITA</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[11px] italic">Belum Pulang</span>
+                            );
+                          })()}
                         </td>
                         <td className="py-3 px-4">{getStatusBadge(record.status)}</td>
                         <td className="py-3 px-4">

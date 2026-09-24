@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AttendanceRecord, SystemSettings, Guru } from '../types';
 import { formatCleanNIP, formatClassLabel } from './classUtils';
+import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from './scheduleUtils';
 
 interface PDFReportOptions {
   records: AttendanceRecord[];
@@ -920,7 +921,7 @@ export const exportOfficialMonthlyRecapPDF = ({
             (r.nis && t.nis && r.nis === t.nis)) &&
           r.date === d.dateStr
       );
-      const timeVal = formatPdfTime(rec?.timeIn || rec?.time);
+      const timeVal = rec ? formatPdfTime(resolveAttendanceEntryTime(rec, settings)) : '';
       r2.push({
         content: timeVal,
         styles: { halign: 'center', valign: 'middle', fontSize: 5 },
@@ -970,9 +971,9 @@ export const exportOfficialMonthlyRecapPDF = ({
             (r.nis && t.nis && r.nis === t.nis)) &&
           r.date === d.dateStr
       );
-      const outVal = rec?.timeOut || (rec?.status === 'Hadir' ? '12.00' : '');
+      const outVal = rec ? formatPdfTime(resolveAttendanceReturnTime(rec, settings)) : '';
       r4.push({
-        content: formatPdfTime(outVal),
+        content: outVal,
         styles: { halign: 'center', valign: 'middle', fontSize: 5 },
       });
     });
