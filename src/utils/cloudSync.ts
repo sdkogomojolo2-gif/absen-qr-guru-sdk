@@ -6,6 +6,10 @@ import {
   syncAllAttendanceToFirestore,
   syncAllTeachersToFirestore,
   saveSettingsToFirestore,
+  fetchAllStudentsFromFirestore,
+  fetchAllAttendanceFromFirestore,
+  fetchAllTeachersFromFirestore,
+  fetchSettingsFromFirestore,
 } from '../services/firestoreService';
 import { safeSetItem, safeGetItem } from './storage';
 
@@ -71,17 +75,17 @@ export const saveToCloudSync = async (
       teachers: Array.isArray(data.teachers) ? data.teachers : [],
     };
 
-    // Store in browser local storage as cache (safely handled against quota)
+    // Store in browser local storage as backup cache (safely handled against quota)
     safeSetItem(`${CLOUD_STORAGE_KEY_PREFIX}${payload.syncCode}`, JSON.stringify(payload));
     safeSetItem('absensi_active_sync_code', payload.syncCode);
     safeSetItem('absensi_last_cloud_sync_time', syncedAt);
 
     // Save snapshot to Firestore Cloud Database
-    let firestoreSuccess = false;
+    let firestoreErrorDetails: string | null = null;
     try {
       await saveCloudSyncToFirestore(payload);
       
-      // Propagate data in parallel high-speed batches to main Firestore collections
+      // Propagate data in parallel batches to main Firestore collections
       const syncTasks: Promise<void>[] = [];
 
       if (payload.students.length > 0) {
@@ -98,17 +102,23 @@ export const saveToCloudSync = async (
       }
 
       await Promise.all(syncTasks);
-      firestoreSuccess = true;
-    } catch (fsErr) {
-      console.warn('Firestore primary sync warning:', fsErr);
+    } catch (fsErr: any) {
+      console.error('Firestore primary sync error:', fsErr);
+      firestoreErrorDetails = fsErr?.message || String(fsErr);
+    }
+
+    if (firestoreErrorDetails) {
+      return {
+        success: false,
+        syncedAt,
+        message: `Gagal menyimpan ke Firestore Cloud: ${firestoreErrorDetails}. Cadangan lokal tersimpan di perangkat ini (Kode: ${payload.syncCode}).`,
+      };
     }
 
     return {
       success: true,
       syncedAt,
-      message: firestoreSuccess
-        ? `Sinkronisasi Cloud Berhasil! (${payload.students.length} Siswa, ${payload.attendanceRecords.length} Rekap Absensi tersimpan ke Firestore dengan Kode Sync: ${payload.syncCode})`
-        : `Data tersimpan ke penyimpanan sinkronisasi lokal & siap terhubung ke Cloud (Kode: ${payload.syncCode})`,
+      message: `Sinkronisasi Cloud Berhasil! (${payload.students.length} Guru/PTK, ${payload.attendanceRecords.length} Rekap Absensi tersimpan ke Firestore dengan Kode Sync: ${payload.syncCode})`,
     };
   } catch (err: any) {
     console.error('Cloud sync failed:', err);
@@ -121,7 +131,10 @@ export const saveToCloudSync = async (
 };
 
 /**
- * Fetches database from Cloud/Sync Storage (Firestore first, localStorage fallback)
+ * Fetches database using 3-tier multi-tier auto-recovery:
+ * Tier 1: Cloud Sync Snapshot document (`cloud_sync/{syncCode}`)
+ * Tier 2: Direct Firestore collections fallback (`students`, `attendance`, `teachers`, `settings`)
+ * Tier 3: LocalStorage backup cache
  */
 export const fetchFromCloudSync = async (
   syncCode: string
@@ -135,48 +148,83 @@ export const fetchFromCloudSync = async (
     };
   }
 
-  // Try Firestore first
+  // Tier 1: Try Cloud Sync Snapshot from Firestore
   try {
     const firestorePayload = await fetchCloudSyncFromFirestore(cleanCode);
-    if (firestorePayload && Array.isArray(firestorePayload.students)) {
+    if (firestorePayload && Array.isArray(firestorePayload.students) && firestorePayload.students.length > 0) {
       return {
         success: true,
         payload: firestorePayload,
-        message: `Berhasil memuat data dari Firebase Cloud (${firestorePayload.students.length} Siswa, ${firestorePayload.attendanceRecords?.length || 0} Catatan Absensi)`,
+        message: `Berhasil memuat data dari Firebase Cloud Sync Snapshot (${firestorePayload.students.length} Guru/PTK, ${firestorePayload.attendanceRecords?.length || 0} Catatan Absensi)`,
       };
     }
   } catch (fsErr) {
-    console.warn('Firestore fetch notice, checking local backup:', fsErr);
+    console.warn('Tier 1 (Snapshot) notice, proceeding to Tier 2 (Direct Collections):', fsErr);
   }
 
-  // Fallback to local storage
+  // Tier 2: Direct Firestore Collections Fallback
+  try {
+    const [directStudents, directAttendance, directTeachers, directSettings] = await Promise.all([
+      fetchAllStudentsFromFirestore(),
+      fetchAllAttendanceFromFirestore(),
+      fetchAllTeachersFromFirestore(),
+      fetchSettingsFromFirestore(),
+    ]);
+
+    if (directStudents && directStudents.length > 0) {
+      const recoveredPayload: CloudSyncPayload = {
+        syncCode: cleanCode,
+        lastSyncedAt: new Date().toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        schoolName: directSettings?.schoolName || 'SD Negeri',
+        students: directStudents,
+        attendanceRecords: directAttendance || [],
+        teachers: directTeachers || [],
+        settings: directSettings || {
+          lateCutoffTime: '07:00',
+          schoolName: 'SD Negeri',
+          schoolAddress: '',
+          academicYear: '2024/2025',
+        },
+      };
+
+      // Cache the recovered data locally
+      safeSetItem(`${CLOUD_STORAGE_KEY_PREFIX}${cleanCode}`, JSON.stringify(recoveredPayload));
+
+      return {
+        success: true,
+        payload: recoveredPayload,
+        message: `Berhasil memuat data dari Koleksi Utama Firestore (${directStudents.length} Guru/PTK, ${directAttendance.length} Catatan Absensi, ${directTeachers.length} Akun Guru)`,
+      };
+    }
+  } catch (tier2Err) {
+    console.warn('Tier 2 (Direct collections) notice, proceeding to Tier 3 (Local Storage):', tier2Err);
+  }
+
+  // Tier 3: LocalStorage backup fallback
   try {
     const raw = safeGetItem(`${CLOUD_STORAGE_KEY_PREFIX}${cleanCode}`);
-    if (!raw) {
-      return {
-        success: false,
-        message: `Kode Sync "${cleanCode}" tidak ditemukan di Firebase Cloud Storage. Pastikan kode sudah benar.`,
-      };
+    if (raw) {
+      const payload: CloudSyncPayload = JSON.parse(raw);
+      if (Array.isArray(payload.students) && payload.students.length > 0) {
+        return {
+          success: true,
+          payload,
+          message: `Berhasil memuat data dari Cadangan Lokal Perangkat (${payload.students.length} Guru/PTK, ${payload.attendanceRecords?.length || 0} Catatan Absensi)`,
+        };
+      }
     }
-
-    const payload: CloudSyncPayload = JSON.parse(raw);
-    if (!payload.students || !payload.attendanceRecords) {
-      return {
-        success: false,
-        message: 'Format data Cloud Sync tidak valid atau terkorupsi.',
-      };
-    }
-
-    return {
-      success: true,
-      payload,
-      message: `Berhasil memuat data dari Cadangan Lokal (${payload.students.length} Siswa, ${payload.attendanceRecords.length} Catatan Absensi)`,
-    };
   } catch (err: any) {
-    console.error('Failed to load from cloud:', err);
-    return {
-      success: false,
-      message: `Gagal memproses data dari Cloud Sync: ${err?.message || 'Format tidak valid'}`,
-    };
+    console.error('Tier 3 fallback failed:', err);
   }
+
+  return {
+    success: false,
+    message: `Data untuk Kode Sync "${cleanCode}" tidak ditemukan di Snapshot Firestore, Koleksi Database Utama, maupun Cadangan Lokal. Pastikan kode sudah benar atau lakukan sinkronisasi dari perangkat utama.`,
+  };
 };

@@ -1,4 +1,4 @@
-import { AttendanceRecord, Student, Teacher } from '../types';
+import { AttendanceRecord, Student, Teacher, TeacherType } from '../types';
 
 /**
  * Utility functions for matching, filtering, and displaying SD school classes.
@@ -160,19 +160,21 @@ export function resolveRecordTeacher(
   teachersList: Teacher[] | undefined,
   studentsList: Student[] | undefined,
   activeTeacher?: Teacher | null
-): { name: string; type: 'wali_kelas' | 'guru_mapel' | 'admin'; subject: string } {
+): { name: string; type: TeacherType; subject: string } {
   // 1. First: Check if record has a teacherId that matches a known teacher
   if (record.teacherId && teachersList) {
     const matchedById = teachersList.find((t) => t.id === record.teacherId);
     if (matchedById) {
-      const type: 'wali_kelas' | 'guru_mapel' | 'admin' =
+      const type: TeacherType =
         matchedById.teacherType ||
         (matchedById.role === 'admin' ? 'admin' : matchedById.homeroomClass ? 'wali_kelas' : 'guru_mapel');
       return {
         name: matchedById.name,
         type,
         subject:
-          type === 'guru_mapel'
+          type === 'kepala_sekolah'
+            ? (matchedById.subject || 'Kepala Sekolah')
+            : type === 'guru_mapel'
             ? (matchedById.subject ? `Mapel: ${matchedById.subject}` : 'Guru Mapel')
             : type === 'wali_kelas'
             ? (matchedById.homeroomClass ? `Wali ${formatClassLabel(matchedById.homeroomClass)}` : 'Wali Kelas')
@@ -197,14 +199,16 @@ export function resolveRecordTeacher(
       (t) => t.name.toLowerCase().trim() === rawName.toLowerCase().trim()
     );
     if (matchedByName) {
-      const type: 'wali_kelas' | 'guru_mapel' | 'admin' =
+      const type: TeacherType =
         matchedByName.teacherType ||
         (matchedByName.role === 'admin' ? 'admin' : matchedByName.homeroomClass ? 'wali_kelas' : 'guru_mapel');
       return {
         name: matchedByName.name,
         type,
         subject:
-          type === 'guru_mapel'
+          type === 'kepala_sekolah'
+            ? (matchedByName.subject || 'Kepala Sekolah')
+            : type === 'guru_mapel'
             ? (matchedByName.subject ? `Mapel: ${matchedByName.subject}` : 'Guru Mapel')
             : type === 'wali_kelas'
             ? (matchedByName.homeroomClass ? `Wali ${formatClassLabel(matchedByName.homeroomClass)}` : 'Wali Kelas')
@@ -221,6 +225,14 @@ export function resolveRecordTeacher(
       };
     }
 
+    if (record.teacherType === 'kepala_sekolah') {
+      return {
+        name: rawName,
+        type: 'kepala_sekolah',
+        subject: record.teacherSubject || 'Kepala Sekolah',
+      };
+    }
+
     if (record.teacherType === 'admin') {
       return {
         name: rawName,
@@ -229,8 +241,8 @@ export function resolveRecordTeacher(
       };
     }
 
-    const fallbackType: 'admin' | 'wali_kelas' | 'guru_mapel' =
-      record.teacherType === 'admin' || record.teacherType === 'guru_mapel'
+    const fallbackType: TeacherType =
+      record.teacherType === 'admin' || record.teacherType === 'guru_mapel' || record.teacherType === 'kepala_sekolah'
         ? record.teacherType
         : 'wali_kelas';
 
@@ -271,14 +283,17 @@ export function resolveRecordTeacher(
 
   // 6. Check if active teacher is present
   if (activeTeacher?.name && activeTeacher.name.trim()) {
-    const type: 'wali_kelas' | 'guru_mapel' | 'admin' =
+    const type: TeacherType =
       activeTeacher.teacherType || (activeTeacher.role === 'admin' ? 'admin' : activeTeacher.homeroomClass ? 'wali_kelas' : 'guru_mapel');
     return {
       name: activeTeacher.name,
       type,
-      subject: activeTeacher.homeroomClass
-        ? `Wali ${formatClassLabel(activeTeacher.homeroomClass)}`
-        : (activeTeacher.subject || (activeTeacher.role === 'admin' ? 'Admin Sekolah' : 'Guru Pengabsen')),
+      subject:
+        type === 'kepala_sekolah'
+          ? (activeTeacher.subject || 'Kepala Sekolah')
+          : activeTeacher.homeroomClass
+          ? `Wali ${formatClassLabel(activeTeacher.homeroomClass)}`
+          : (activeTeacher.subject || (activeTeacher.role === 'admin' ? 'Admin Sekolah' : 'Guru Pengabsen')),
     };
   }
 
@@ -295,12 +310,15 @@ export function resolveRecordTeacher(
   // 8. First teacher in list
   if (teachersList && teachersList.length > 0 && teachersList[0].name) {
     const t0 = teachersList[0];
-    const type: 'wali_kelas' | 'guru_mapel' | 'admin' =
+    const type: TeacherType =
       t0.teacherType || (t0.role === 'admin' ? 'admin' : t0.homeroomClass ? 'wali_kelas' : 'guru_mapel');
     return {
       name: t0.name,
       type,
-      subject: t0.subject || (t0.homeroomClass ? `Wali ${formatClassLabel(t0.homeroomClass)}` : 'Wali Kelas'),
+      subject:
+        type === 'kepala_sekolah'
+          ? (t0.subject || 'Kepala Sekolah')
+          : t0.subject || (t0.homeroomClass ? `Wali ${formatClassLabel(t0.homeroomClass)}` : 'Wali Kelas'),
     };
   }
 

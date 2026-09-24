@@ -185,7 +185,7 @@ export const isSuperAdminEmail = (email?: string | null): boolean => {
   return email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 };
 
-export type TeacherType = 'admin' | 'wali_kelas' | 'guru_mapel';
+export type TeacherType = 'admin' | 'wali_kelas' | 'guru_mapel' | 'kepala_sekolah';
 
 export interface Teacher {
   id: string;

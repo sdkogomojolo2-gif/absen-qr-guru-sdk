@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { AttendanceRecord, AttendanceStatus, Student, Teacher } from '../types';
+import { AttendanceRecord, AttendanceStatus, Student, Teacher, TeacherType } from '../types';
 import { isHomeroomClassMatch } from '../utils/classUtils';
 
 interface EditAttendanceModalProps {
@@ -101,7 +101,7 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
 
     const teacherObj = teachers.find((t) => t.id === actingTeacherId) || currentTeacher || teachers[0];
 
-    const teacherType: 'admin' | 'wali_kelas' | 'guru_mapel' =
+    const teacherType: TeacherType =
       teacherObj?.teacherType ||
       (teacherObj?.role === 'admin'
         ? 'admin'
@@ -110,7 +110,9 @@ export const EditAttendanceModal: React.FC<EditAttendanceModalProps> = ({
         : 'guru_mapel');
 
     const teacherSubject =
-      teacherType === 'wali_kelas'
+      teacherType === 'kepala_sekolah'
+        ? (teacherObj?.subject || 'Kepala Sekolah')
+        : teacherType === 'wali_kelas'
         ? (teacherObj?.homeroomClass ? `Wali ${teacherObj.homeroomClass}` : 'Wali Kelas')
         : teacherType === 'guru_mapel'
         ? (teacherObj?.subject ? `Mapel: ${teacherObj.subject}` : 'Guru Mapel')

@@ -773,7 +773,31 @@ export default function App() {
     saveTeacherToFirestore(newTeacher).catch((err) =>
       console.warn('Failed to save teacher to Firestore:', err)
     );
-    addToast('Guru Mapel Ditambahkan', `Akun ${newTeacher.name} (${newTeacher.subject}) berhasil disimpan.`, 'success');
+
+    // If this teacher is Kepala Sekolah or Guru and doesn't exist yet in students list (PTK presensi list),
+    // automatically register them into students so they can scan QR / do absensi
+    if (newTeacher.nip || newTeacher.teacherType === 'kepala_sekolah') {
+      const teacherNis = newTeacher.nip || `KS-${Date.now().toString().slice(-6)}`;
+      const existingStudent = students.find((s) => s.nis.toLowerCase() === teacherNis.toLowerCase() || s.name.toLowerCase() === newTeacher.name.toLowerCase());
+      if (!existingStudent) {
+        const studentRecord: Student = {
+          id: `std-${Date.now()}`,
+          schoolId: DEFAULT_PRIMARY_SCHOOL_ID,
+          name: newTeacher.name,
+          nis: teacherNis,
+          classRoom: newTeacher.teacherType === 'kepala_sekolah' ? 'Kepala Sekolah' : 'Dewan Guru',
+          gender: 'Laki-laki',
+          createdAt: getTodayDateString(),
+        };
+        setStudents((prev) => [...prev, studentRecord]);
+        saveStudentToFirestore(studentRecord).catch((err) =>
+          console.warn('Auto-register teacher attendance profile warning:', err)
+        );
+      }
+    }
+
+    const roleLabel = newTeacher.teacherType === 'kepala_sekolah' ? 'Kepala Sekolah' : newTeacher.teacherType === 'admin' ? 'Admin' : 'Guru';
+    addToast('Akun Ditambahkan', `Akun ${newTeacher.name} (${roleLabel}) berhasil disimpan.`, 'success');
   };
 
   // Update Teacher / Admin Handler

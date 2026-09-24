@@ -461,6 +461,30 @@ export function subscribeToSettings(
 }
 
 /**
+ * Fetches System Settings directly from Firestore
+ */
+export async function fetchSettingsFromFirestore(schoolId?: string): Promise<SystemSettings | null> {
+  const targetId = schoolId || 'school';
+  try {
+    const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, targetId));
+    if (docSnap.exists()) {
+      return docSnap.data() as SystemSettings;
+    }
+    // Fallback to legacy 'school'
+    if (targetId !== 'school') {
+      const fallbackSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, 'school'));
+      if (fallbackSnap.exists()) {
+        return fallbackSnap.data() as SystemSettings;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.warn('fetchSettingsFromFirestore notice:', error);
+    return null;
+  }
+}
+
+/**
  * Saves System Settings to Firestore.
  * Saves to dedicated document per school (settings/{schoolId}), and also maintains
  * legacy settings/school for the default primary school (Ulatan) for backward-compatibility.
@@ -481,12 +505,43 @@ export async function saveSettingsToFirestore(settings: SystemSettings, schoolId
 
 /**
  * Cloud Sync Snapshots to Firestore
+ * Uses a lightweight payload where heavy base64 photos (>1500 characters) are stripped
+ * to prevent exceeding Firestore's 1 MiB per-document limit when there are many students.
+ * Full student profiles and photos are preserved intact in the individual `students/{id}` collection.
  */
 export async function saveCloudSyncToFirestore(payload: CloudSyncPayload): Promise<void> {
   const cleanCode = payload.syncCode.trim().toUpperCase();
   const path = `${COLLECTIONS.CLOUD_SYNC}/${cleanCode}`;
   try {
-    await setDoc(doc(db, COLLECTIONS.CLOUD_SYNC, cleanCode), sanitizeForFirestore(payload));
+    // Create lightweight snapshot copy
+    const lightweightPayload: CloudSyncPayload = {
+      ...payload,
+      students: (payload.students || []).map((s) => {
+        const copy = { ...s };
+        if (typeof copy.photo === 'string' && copy.photo.length > 1500) {
+          copy.photo = '';
+        }
+        if (typeof copy.avatarUrl === 'string' && copy.avatarUrl.length > 1500) {
+          copy.avatarUrl = '';
+        }
+        return copy;
+      }),
+      attendanceRecords: (payload.attendanceRecords || []).map((r) => {
+        const copy = { ...r };
+        if (typeof copy.photoEvidence === 'string' && copy.photoEvidence.length > 1500) {
+          copy.photoEvidence = '';
+        }
+        if (typeof copy.photoIn === 'string' && copy.photoIn.length > 1500) {
+          copy.photoIn = '';
+        }
+        if (typeof copy.photoOut === 'string' && copy.photoOut.length > 1500) {
+          copy.photoOut = '';
+        }
+        return copy;
+      }),
+    };
+
+    await setDoc(doc(db, COLLECTIONS.CLOUD_SYNC, cleanCode), sanitizeForFirestore(lightweightPayload));
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }

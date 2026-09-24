@@ -46,31 +46,39 @@ export function cleanStaleLocalStorage(): void {
 }
 
 /**
- * Strips or truncates heavy base64 data URLs from JSON objects to fit within local storage limits
+ * Helper to sanitize an individual object by removing or truncating heavy base64 strings
+ */
+function sanitizeObjectPhotos(obj: any): any {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeObjectPhotos);
+  }
+  const clone = { ...obj };
+  const keysToClean = ['photo', 'avatarUrl', 'attachmentPhoto', 'photoEvidence', 'photoIn', 'photoOut', 'signatureDataUrl'];
+  for (const k of keysToClean) {
+    if (typeof clone[k] === 'string' && (clone[k].startsWith('data:') || clone[k].length > 1500)) {
+      clone[k] = '';
+    }
+  }
+  // Also recursively sanitize nested properties like students array in CloudSyncPayload
+  for (const prop of Object.keys(clone)) {
+    if (Array.isArray(clone[prop])) {
+      clone[prop] = clone[prop].map(sanitizeObjectPhotos);
+    } else if (typeof clone[prop] === 'object' && clone[prop] !== null) {
+      clone[prop] = sanitizeObjectPhotos(clone[prop]);
+    }
+  }
+  return clone;
+}
+
+/**
+ * Strips or truncates heavy base64 data URLs from JSON objects or arrays to fit within local storage limits
  */
 function createLightweightCache(value: string): string {
   try {
     const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) {
-      const sanitized = parsed.map((item) => {
-        if (typeof item === 'object' && item !== null) {
-          const clone = { ...item };
-          if (typeof clone.photo === 'string' && clone.photo.startsWith('data:') && clone.photo.length > 2000) {
-            clone.photo = '';
-          }
-          if (typeof clone.avatarUrl === 'string' && clone.avatarUrl.startsWith('data:') && clone.avatarUrl.length > 2000) {
-            clone.avatarUrl = '';
-          }
-          if (typeof clone.attachmentPhoto === 'string' && clone.attachmentPhoto.startsWith('data:') && clone.attachmentPhoto.length > 2000) {
-            clone.attachmentPhoto = '';
-          }
-          return clone;
-        }
-        return item;
-      });
-      return JSON.stringify(sanitized);
-    }
-    return value;
+    const sanitized = sanitizeObjectPhotos(parsed);
+    return JSON.stringify(sanitized);
   } catch {
     return value;
   }

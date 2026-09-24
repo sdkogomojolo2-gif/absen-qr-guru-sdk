@@ -40,7 +40,10 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
     setEmail(teacher.email);
     setPin(teacher.pin || '1234');
     setSubject(teacher.subject);
-    setTeacherType(teacher.teacherType || (teacher.role === 'admin' ? 'admin' : (teacher.homeroomClass ? 'wali_kelas' : 'guru_mapel')));
+    setTeacherType(
+      teacher.teacherType ||
+      (teacher.subject?.toLowerCase().includes('kepala sekolah') ? 'kepala_sekolah' : teacher.role === 'admin' ? 'admin' : (teacher.homeroomClass ? 'wali_kelas' : 'guru_mapel'))
+    );
     setHomeroomClass(teacher.homeroomClass || 'Kelas 1');
   };
 
@@ -73,8 +76,8 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
       return;
     }
 
-    const computedRole = teacherType === 'admin' ? 'admin' : 'guru';
-    const computedHomeroomClass = teacherType === 'wali_kelas' ? homeroomClass : undefined;
+    const computedRole = (teacherType === 'admin' || teacherType === 'kepala_sekolah') ? 'admin' : 'guru';
+    const computedHomeroomClass = teacherType === 'wali_kelas' ? homeroomClass : (teacherType === 'kepala_sekolah' ? 'Kepala Sekolah' : undefined);
 
     if (editingTeacherId) {
       const existing = teachers.find((t) => t.id === editingTeacherId);
@@ -299,7 +302,24 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                 {/* Preset cepat untuk mempermudah pengisian */}
                 <div className="flex flex-wrap gap-1 mt-1.5 items-center">
                   <span className="text-[10px] text-slate-400 font-medium">Pilihan cepat:</span>
-                  {teacherType === 'wali_kelas' ? (
+                  {teacherType === 'kepala_sekolah' ? (
+                    <>
+                      {['Kepala Sekolah', 'Plt. Kepala Sekolah', 'Kepala Satuan Pendidikan'].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSubject(preset)}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-semibold transition-all cursor-pointer ${
+                            subject === preset
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </>
+                  ) : teacherType === 'wali_kelas' ? (
                     <>
                       {['Guru Kelas', 'Tematik', 'Guru Kelas & Tematik'].map((preset) => (
                         <button
@@ -318,7 +338,7 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                     </>
                   ) : teacherType === 'admin' ? (
                     <>
-                      {['Administrator', 'Operator Sekolah', 'Kepala Sekolah'].map((preset) => (
+                      {['Administrator', 'Operator Sekolah', 'Tenaga Administrasi'].map((preset) => (
                         <button
                           key={preset}
                           type="button"
@@ -360,9 +380,16 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                 </label>
                 <select
                   value={teacherType}
-                  onChange={(e) => setTeacherType(e.target.value as TeacherType)}
+                  onChange={(e) => {
+                    const newType = e.target.value as TeacherType;
+                    setTeacherType(newType);
+                    if (newType === 'kepala_sekolah' && (!subject || subject === 'Guru Kelas' || subject === 'Administrator')) {
+                      setSubject('Kepala Sekolah');
+                    }
+                  }}
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
+                  <option value="kepala_sekolah">Kepala Sekolah (Bisa Absensi, Kelola Semua Kelas & TTD Utama)</option>
                   <option value="wali_kelas">Guru Wali Kelas (Bisa Edit Siswa Kelasnya & TTD Laporan)</option>
                   <option value="guru_mapel">Guru Mapel (Hanya Lihat Presensi & Scan QR)</option>
                   <option value="admin">Administrator Sekolah (Akses Penuh Semua Kelas)</option>
@@ -391,7 +418,11 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
             <div className="text-[11px] bg-indigo-50/60 border border-indigo-100 p-2.5 rounded-xl text-indigo-900 flex items-start gap-2">
               <i className="fa-solid fa-circle-info text-indigo-600 mt-0.5"></i>
               <div>
-                {teacherType === 'wali_kelas' ? (
+                {teacherType === 'kepala_sekolah' ? (
+                  <span>
+                    <strong>Kepala Sekolah:</strong> Berhak melakukan absensi harian / scan kartu, memantau seluruh kelas, dan namanya otomatis menjadi penandatangan utama (Mengetahui) pada seluruh rekap dan laporan presensi.
+                  </span>
+                ) : teacherType === 'wali_kelas' ? (
                   <span>
                     <strong>Wali Kelas {homeroomClass}:</strong> Berhak mengedit siswa kelas <strong>{homeroomClass}</strong>. Nama dan NIP akan otomatis tertera di tanda tangan laporan presensi.
                   </span>
@@ -467,7 +498,8 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                     filteredTeachers.map((t) => {
                     const isCurrent = currentTeacher?.id === t.id;
                     const isEditing = editingTeacherId === t.id;
-                    const isWali = t.teacherType === 'wali_kelas' || Boolean(t.homeroomClass);
+                    const isKepalaSekolah = t.teacherType === 'kepala_sekolah' || t.subject?.toLowerCase().includes('kepala sekolah');
+                    const isWali = (t.teacherType === 'wali_kelas' || Boolean(t.homeroomClass)) && !isKepalaSekolah;
 
                     return (
                       <tr
@@ -510,7 +542,12 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                         </td>
                         <td className="p-3 text-slate-700">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            {t.role === 'admin' || t.teacherType === 'admin' ? (
+                            {isKepalaSekolah ? (
+                              <span className="text-[10px] bg-purple-100 text-purple-900 border border-purple-200 px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1">
+                                <i className="fa-solid fa-award text-purple-700 text-[9px]"></i>
+                                Kepala Sekolah
+                              </span>
+                            ) : t.role === 'admin' || t.teacherType === 'admin' ? (
                               <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1">
                                 <i className="fa-solid fa-shield-halved text-amber-700 text-[9px]"></i>
                                 Admin Sekolah
