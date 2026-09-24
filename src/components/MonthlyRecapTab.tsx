@@ -369,10 +369,11 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
               onChange={(e) => setSelectedStatusFilter(e.target.value)}
               className="bg-[#670c14] border border-red-700/60 rounded-lg px-2.5 py-1 text-white text-xs font-semibold focus:outline-none"
             >
-              <option value="Semua">Semua Status (Urut: PNS → P3K → Honorer)</option>
+              <option value="Semua">Semua Status (Urut: PNS → P3K → Honor K-2 → Honorer Sekolah)</option>
               <option value="PNS">PNS (Pegawai Negeri Sipil)</option>
               <option value="PPPK">P3K / PPPK</option>
-              <option value="Honorer">Honorer / GTT</option>
+              <option value="Honor K-2">Honor K-2</option>
+              <option value="Honorer Sekolah">Honorer Sekolah</option>
             </select>
           </div>
 
@@ -525,19 +526,19 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
                           <div className="font-sans text-[9px]">
                             <span className="text-slate-500 font-medium">Pangkat.Gol :</span>{' '}
                             <span className="font-semibold text-slate-700">
-                              {teacher.rankGrade || 'Penata Tkt.I , III/d'}
+                              {teacher.rankGrade && teacher.rankGrade.trim() ? teacher.rankGrade : '-'}
                             </span>
                           </div>
-                          <div className="font-sans text-[9px] truncate" title={teacher.address || 'Palasa Tengah'}>
+                          <div className="font-sans text-[9px] truncate" title={teacher.address || '-'}>
                             <span className="text-slate-500 font-medium">Almt :</span>{' '}
                             <span className="text-slate-700">
-                              {teacher.address || 'Palasa Tengah'}
+                              {teacher.address && teacher.address.trim() ? teacher.address : '-'}
                             </span>
                           </div>
                           <div className="font-sans text-[9px]">
                             <span className="text-slate-500 font-medium">Jrk Rmh dr sekolah :</span>{' '}
                             <span className="text-slate-700">
-                              {teacher.schoolDistance || '3.000 M'}
+                              {teacher.schoolDistance && teacher.schoolDistance.trim() ? teacher.schoolDistance : '-'}
                             </span>
                           </div>
                         </div>

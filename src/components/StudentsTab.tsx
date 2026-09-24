@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Student, Gender, SystemSettings, Teacher, ScheduledLeave, BehaviorLog } from '../types';
+import { Student, Gender, SystemSettings, Teacher, ScheduledLeave, BehaviorLog, EmploymentStatus } from '../types';
 import { StudentCardModal } from './StudentCardModal';
 import { BulkCardPrintModal } from './BulkCardPrintModal';
 import { MALE_BW_AVATAR, FEMALE_BW_AVATAR, getDefaultAvatar } from '../utils/avatars';
@@ -9,6 +9,15 @@ import { formatPhoneNumberForWA } from '../utils/whatsapp';
 import { isHomeroomClassMatch, formatClassLabel, findHomeroomTeacher } from '../utils/classUtils';
 import { compressStudentPhoto } from '../utils/imageCompressor';
 import { ScheduledLeaveModal } from './ScheduledLeaveModal';
+import {
+  EMPLOYMENT_STATUS_OPTIONS,
+  normalizeEmploymentStatus,
+  getCanonicalStatusGroup,
+  getEmploymentStatusRank,
+  PNS_RANK_OPTIONS,
+  P3K_RANK_OPTIONS,
+  COMMON_SCHOOL_DISTANCES,
+} from '../utils/statusUtils';
 
 interface StudentsTabProps {
   students: Student[];
@@ -48,7 +57,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
   onOpenERaporSync,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'nis' | 'class'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'nis' | 'class' | 'status'>('name');
 
   // Multi-select state for bulk actions (Delete & Print A4)
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
@@ -122,7 +131,10 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
     birthPlace: '',
     birthDate: '',
     address: '',
+    schoolDistance: '',
     classRoom: 'Guru Kelas 1',
+    employmentStatus: 'Honorer Sekolah' as EmploymentStatus,
+    rankGrade: '',
     gender: 'Laki-laki' as Gender,
     parentPhone: '',
     avatarUrl: MALE_BW_AVATAR,
@@ -184,6 +196,12 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
         if (sortBy === 'class') {
           const classCompare = (a.classRoom || '').localeCompare(b.classRoom || '');
           if (classCompare !== 0) return classCompare;
+          return a.name.localeCompare(b.name);
+        }
+        if (sortBy === 'status') {
+          const rankA = getEmploymentStatusRank(a.employmentStatus);
+          const rankB = getEmploymentStatusRank(b.employmentStatus);
+          if (rankA !== rankB) return rankA - rankB;
           return a.name.localeCompare(b.name);
         }
         return a.name.localeCompare(b.name);
@@ -286,7 +304,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       return;
     }
     setEditingStudent(null);
-    const initialClass = (isWaliKelas && myHomeroom) ? myHomeroom : (selectedClass !== 'Semua' ? selectedClass : 'Kelas 1');
+    const initialClass = (isWaliKelas && myHomeroom) ? myHomeroom : (selectedClass !== 'Semua' ? selectedClass : 'Guru Kelas 1');
     setFormData({
       nis: String(1000 + students.length + 1),
       nisn: '',
@@ -294,7 +312,10 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       birthPlace: '',
       birthDate: '',
       address: '',
+      schoolDistance: '3.000 M',
       classRoom: initialClass,
+      employmentStatus: 'Honorer Sekolah',
+      rankGrade: '',
       gender: 'Laki-laki',
       parentPhone: '',
       avatarUrl: MALE_BW_AVATAR,
@@ -320,9 +341,12 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       birthPlace: student.birthPlace || '',
       birthDate: student.birthDate || '',
       address: student.address || '',
+      schoolDistance: student.schoolDistance || '',
       classRoom: student.classRoom ? formatClassLabel(student.classRoom) : 'Guru Kelas 1',
+      employmentStatus: normalizeEmploymentStatus(student.employmentStatus),
+      rankGrade: student.rankGrade || '',
       gender: student.gender,
-      parentPhone: student.parentPhone,
+      parentPhone: student.parentPhone || student.phone || '',
       avatarUrl: student.avatarUrl || getDefaultAvatar(student.gender),
       photo: student.photo,
     });
@@ -419,6 +443,9 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
     const payload = {
       ...formData,
       classRoom: formatClassLabel(formData.classRoom),
+      employmentStatus: formData.employmentStatus,
+      rankGrade: formData.rankGrade.trim() || undefined,
+      schoolDistance: formData.schoolDistance.trim() || undefined,
       nip: formData.nis.trim(),
       nuptk: formData.nisn ? formData.nisn.trim() : undefined,
       nis: formData.nis.trim(),
@@ -643,7 +670,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
               <span className="font-semibold text-slate-500 dark:text-slate-400">Urutkan:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'name' | 'nis' | 'class')}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'nis' | 'class' | 'status')}
                 className="bg-transparent text-slate-800 dark:text-slate-100 font-bold focus:outline-none cursor-pointer"
               >
                 <option value="name" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
@@ -654,6 +681,9 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                 </option>
                 <option value="class" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
                   Jabatan / Penugasan
+                </option>
+                <option value="status" className="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
+                  Status (PNS → P3K → Honor)
                 </option>
               </select>
             </div>
@@ -815,7 +845,8 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                 <th className="py-3 px-4">Foto & Biodata Guru</th>
                 <th className="py-3 px-4">NIP / NUPTK</th>
                 <th className="py-3 px-4">Jabatan / Tugas</th>
-                <th className="py-3 px-4">L/P</th>
+                <th className="py-3 px-3 text-center">Status / Jenis</th>
+                <th className="py-3 px-3 text-center">L/P</th>
                 <th className="py-3 px-4">WhatsApp Guru</th>
                 <th className="py-3 px-4 text-center">Aksi / Kartu</th>
               </tr>
@@ -866,6 +897,12 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                                 <span>{student.address}</span>
                               </div>
                             )}
+                            {student.schoolDistance && (
+                              <div className="text-[9.5px] text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1 mt-0.5" title={`Jarak ke sekolah: ${student.schoolDistance}`}>
+                                <i className="fa-solid fa-route text-[8.5px] text-indigo-500"></i>
+                                <span>Jarak: {student.schoolDistance}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -882,7 +919,52 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                           {student.classRoom}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300 font-medium">{student.gender}</td>
+                      <td className="py-3 px-3 text-center">
+                        {(() => {
+                          const status = normalizeEmploymentStatus(student.employmentStatus);
+                          let badge = null;
+                          if (status === 'PNS') {
+                            badge = (
+                              <span className="inline-block px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                                PNS
+                              </span>
+                            );
+                          } else if (status === 'P3K') {
+                            badge = (
+                              <span className="inline-block px-2 py-0.5 text-[11px] font-bold rounded-md bg-sky-100 dark:bg-sky-950/70 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800 shadow-2xs">
+                                P3K
+                              </span>
+                            );
+                          } else if (status === 'Honor K-2') {
+                            badge = (
+                              <span className="inline-block px-2 py-0.5 text-[11px] font-bold rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs">
+                                Honor K-2
+                              </span>
+                            );
+                          } else {
+                            badge = (
+                              <span className="inline-block px-2 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shadow-2xs">
+                                Honorer Sekolah
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <div>
+                              {badge}
+                              {student.rankGrade && student.rankGrade.trim() && student.rankGrade !== '-' && (
+                                <div
+                                  className="text-[9.5px] font-bold text-slate-600 dark:text-slate-400 font-mono mt-1 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 truncate max-w-[130px] mx-auto"
+                                  title={`Golongan / Pangkat: ${student.rankGrade}`}
+                                >
+                                  Gol: {student.rankGrade}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="py-3 px-3 text-center text-slate-600 dark:text-slate-300 font-medium">{student.gender}</td>
                       <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-300 font-medium">
                         <div className="flex items-center gap-1.5">
                           <span>{student.parentPhone}</span>
@@ -956,7 +1038,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-14 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={9} className="py-14 text-center text-slate-500 dark:text-slate-400">
                     <div className="max-w-sm mx-auto space-y-3">
                       <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mx-auto text-2xl shadow-xs">
                         <i className="fa-solid fa-users"></i>
@@ -1130,39 +1212,137 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                 </div>
               </div>
 
-              {/* Row 4: Alamat Tempat Tinggal */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  Alamat Tempat Tinggal
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: RT 03 Desa Ogomojolo"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-500 focus:bg-white"
-                />
-              </div>
-
-              {/* Row 5: Jabatan / Tugas & Jenis Kelamin */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Row 4: Alamat & Jarak Rumah ke Sekolah */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    Alamat Tempat Tinggal
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Palasa atau RT 03 Desa Ogomojolo"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                    Jabatan / Tugas Mengajar <span className="text-rose-500">*</span>
+                    Jarak ke Sekolah
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 3.000 M"
+                    value={formData.schoolDistance}
+                    onChange={(e) => setFormData({ ...formData, schoolDistance: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {COMMON_SCHOOL_DISTANCES.slice(0, 4).map((dist) => (
+                      <button
+                        type="button"
+                        key={dist}
+                        onClick={() => setFormData({ ...formData, schoolDistance: dist })}
+                        className="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-indigo-100 text-slate-600 dark:text-slate-300 font-semibold transition-colors"
+                      >
+                        {dist}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Jabatan / Tugas Mengajar */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  Jabatan / Tugas Mengajar <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={formData.classRoom}
+                  onChange={(e) => setFormData({ ...formData, classRoom: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white cursor-pointer"
+                >
+                  {availableClasses.map((cls) => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Row 6: Jenis Karyawan & Golongan / Pangkat (PNS & P3K) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    Jenis Karyawan <span className="text-rose-500">*</span>
                   </label>
                   <select
-                    value={formData.classRoom}
-                    onChange={(e) => setFormData({ ...formData, classRoom: e.target.value })}
+                    value={formData.employmentStatus}
+                    onChange={(e) => {
+                      const nextStatus = e.target.value as EmploymentStatus;
+                      setFormData((prev) => {
+                        let nextRank = prev.rankGrade;
+                        if (nextStatus === 'PNS' && (!nextRank || nextRank === '-' || nextRank.startsWith('Golongan'))) {
+                          nextRank = 'Penata Muda (III/a)';
+                        } else if (nextStatus === 'P3K' && (!nextRank || nextRank === '-' || nextRank.includes('('))) {
+                          nextRank = 'Golongan IX (Ahli Pertama)';
+                        } else if (nextStatus === 'Honor K-2' || nextStatus === 'Honorer Sekolah') {
+                          if (!nextRank) nextRank = '-';
+                        }
+                        return {
+                          ...prev,
+                          employmentStatus: nextStatus,
+                          rankGrade: nextRank,
+                        };
+                      });
+                    }}
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white cursor-pointer"
                   >
-                    {availableClasses.map((cls) => (
-                      <option key={cls} value={cls}>
-                        {cls}
+                    {EMPLOYMENT_STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
                       </option>
                     ))}
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between">
+                    <span>
+                      Golongan / Pangkat{' '}
+                      {formData.employmentStatus === 'PNS' || formData.employmentStatus === 'P3K' ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                          ({formData.employmentStatus})
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-normal">(-)</span>
+                      )}
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    list="rank-grade-suggestions"
+                    placeholder={
+                      formData.employmentStatus === 'PNS'
+                        ? 'Contoh: Penata Tkt. I (III/d) atau III/a'
+                        : formData.employmentStatus === 'P3K'
+                        ? 'Contoh: Golongan IX (Ahli Pertama)'
+                        : 'Ketik (-) untuk Non-Golongan'
+                    }
+                    value={formData.rankGrade}
+                    onChange={(e) => setFormData({ ...formData, rankGrade: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-medium focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  />
+                  <datalist id="rank-grade-suggestions">
+                    {formData.employmentStatus === 'PNS' && PNS_RANK_OPTIONS.map((r) => <option key={r} value={r} />)}
+                    {formData.employmentStatus === 'P3K' && P3K_RANK_OPTIONS.map((r) => <option key={r} value={r} />)}
+                    {formData.employmentStatus !== 'PNS' && formData.employmentStatus !== 'P3K' && <option value="-" />}
+                  </datalist>
+                </div>
+              </div>
+
+              {/* Row 7: Jenis Kelamin & No. WhatsApp */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     Jenis Kelamin
@@ -1186,20 +1366,19 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                     <option value="Perempuan">Perempuan</option>
                   </select>
                 </div>
-              </div>
 
-              {/* Row 6: No. WhatsApp Guru */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  No. WhatsApp Pribadi Guru
-                </label>
-                <input
-                  type="text"
-                  placeholder="081234567890"
-                  value={formData.parentPhone}
-                  onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:border-indigo-500 focus:bg-white"
-                />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    No. WhatsApp Pribadi Guru
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="081234567890"
+                    value={formData.parentPhone}
+                    onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-mono focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  />
+                </div>
               </div>
 
               {/* Photo Upload & Black/White Silhouette Options */}

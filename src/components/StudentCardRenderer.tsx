@@ -247,7 +247,14 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
                 </span>
               </div>
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[7.5px] leading-tight">Berlaku sampai</span>
+                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[8px]">Status</span>
+                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center">:</span>
+                <span className="font-bold text-slate-800 text-[8px] truncate flex-1 min-w-0" title={employmentStatus}>
+                  {employmentStatus}{student.rankGrade && student.rankGrade.trim() && student.rankGrade !== '-' ? ` (${student.rankGrade})` : ''}
+                </span>
+              </div>
+              <div className="flex items-baseline">
+                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[7.5px] leading-tight">Berlaku</span>
                 <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center leading-tight">:</span>
                 <span className="font-semibold text-slate-700 text-[7px] leading-snug flex-1 min-w-0">
                   selama menjabat disekolah ini

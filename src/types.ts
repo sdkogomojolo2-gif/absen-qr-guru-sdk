@@ -2,7 +2,7 @@ export type AttendanceStatus = 'Hadir' | 'Terlambat' | 'Dinas Luar' | 'Izin' | '
 
 export type Gender = 'Laki-laki' | 'Perempuan';
 
-export type EmploymentStatus = 'PNS' | 'PPPK' | 'GTY' | 'Honorer / GTT' | 'Tenaga Kependidikan';
+export type EmploymentStatus = 'PNS' | 'P3K' | 'PPPK' | 'Honor K-2' | 'Honorer Sekolah' | 'Honorer / GTT' | 'GTY' | 'Tenaga Kependidikan';
 
 export interface School {
   id: string; // unique slug e.g. 'sdk-ogomojolo', 'sd-inpres-2-ulatan'

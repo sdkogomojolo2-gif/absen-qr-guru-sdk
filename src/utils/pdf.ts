@@ -831,7 +831,9 @@ export const exportOfficialMonthlyRecapPDF = ({
   const bodyRows: any[][] = [];
 
   teachers.forEach((t, tIdx) => {
-    const biodata = `${t.name}\nNUPTK: ${t.nuptk || '-'}\nNIP: ${t.nip || '-'}\nGol: ${t.rankGrade || '-'}\nAlamat: ${t.address || '-'}\nJarak: ${t.schoolDistance || '3.000 M'}`;
+    const golStr = t.rankGrade && t.rankGrade.trim() ? t.rankGrade : '-';
+    const jarakStr = t.schoolDistance && t.schoolDistance.trim() ? t.schoolDistance : '-';
+    const biodata = `${t.name}\nNUPTK: ${t.nuptk || '-'}\nNIP: ${t.nip || '-'}\nGol: ${golStr}\nAlamat: ${t.address || '-'}\nJarak: ${jarakStr}`;
     const ketStatus = t.employmentStatus || 'PNS';
 
     // Subrow 1: Paraf Masuk

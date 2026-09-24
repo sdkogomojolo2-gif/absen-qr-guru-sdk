@@ -1,42 +1,61 @@
 import * as XLSX from 'xlsx';
 import { Student } from '../types';
-import { sortTeachersByStatus } from './statusUtils';
+import { sortTeachersByStatus, normalizeEmploymentStatus } from './statusUtils';
 
 /**
  * Downloads a true Excel (.xlsx) template for bulk student import
  * Headers: NIS, Nama, Kelas, No HP Orang Tua
  */
-export const downloadStudentImportTemplateExcel = (className: string = 'Guru Kelas') => {
+export const downloadStudentImportTemplateExcel = (className: string = 'Guru 1') => {
   const templateData = [
     {
       'NIP / NUPTK': '198503152010011005',
       'Nama': 'Ahmad Fauzi, S.Pd.',
-      'Jabatan / Tugas': className || 'Guru Kelas',
-      'Status Kepegawaian': 'PNS',
+      'Jabatan / Tugas': className || 'Guru 1',
+      'Jenis Karyawan': 'PNS',
+      'Golongan / Pangkat': 'Penata Tkt. I (III/d)',
+      'Jarak Rumah ke Sekolah': '3.000 M',
       'Jenis Kelamin': 'Laki-laki',
-      'No HP Orang Tua': '081234567890',
+      'No HP Guru / WA': '081234567890',
       'Tempat Lahir': 'Paser',
       'Tanggal Lahir': '1985-05-12',
-      'Alamat': 'RT 03 Desa Ogomojolo',
+      'Alamat': 'Palasa',
     },
     {
       'NIP / NUPTK': '199007202014022003',
       'Nama': 'Anisa Rahmawati, S.Pd.SD',
       'Jabatan / Tugas': 'Guru PJOK',
-      'Status Kepegawaian': 'PPPK',
+      'Jenis Karyawan': 'P3K',
+      'Golongan / Pangkat': 'Golongan IX (Ahli Pertama)',
+      'Jarak Rumah ke Sekolah': '1.500 M',
       'Jenis Kelamin': 'Perempuan',
-      'No HP Orang Tua': '081234567891',
+      'No HP Guru / WA': '081234567891',
       'Tempat Lahir': 'Tanah Grogot',
       'Tanggal Lahir': '1990-08-20',
       'Alamat': 'RT 01 Desa Ogomojolo',
     },
     {
+      'NIP / NUPTK': '199208152021041003',
+      'Nama': 'Hasan Basri, S.Pd.',
+      'Jabatan / Tugas': 'Guru 2',
+      'Jenis Karyawan': 'Honor K-2',
+      'Golongan / Pangkat': '-',
+      'Jarak Rumah ke Sekolah': '500 M',
+      'Jenis Kelamin': 'Laki-laki',
+      'No HP Guru / WA': '081234567893',
+      'Tempat Lahir': 'Tolitoli',
+      'Tanggal Lahir': '1992-08-15',
+      'Alamat': 'RT 04 Desa Ogomojolo',
+    },
+    {
       'NIP / NUPTK': '199511042022031002',
       'Nama': 'Budi Santoso, S.Kom.',
       'Jabatan / Tugas': 'Tenaga Administrasi / Operator',
-      'Status Kepegawaian': 'Honorer / GTT',
+      'Jenis Karyawan': 'Honorer Sekolah',
+      'Golongan / Pangkat': '-',
+      'Jarak Rumah ke Sekolah': '2.000 M',
       'Jenis Kelamin': 'Laki-laki',
-      'No HP Orang Tua': '081234567892',
+      'No HP Guru / WA': '081234567892',
       'Tempat Lahir': 'Paser',
       'Tanggal Lahir': '1995-11-04',
       'Alamat': 'RT 02 Desa Ogomojolo',
@@ -50,12 +69,14 @@ export const downloadStudentImportTemplateExcel = (className: string = 'Guru Kel
     { wch: 22 }, // NIP / NUPTK
     { wch: 28 }, // Nama
     { wch: 28 }, // Jabatan
-    { wch: 20 }, // Status Kepegawaian
+    { wch: 20 }, // Jenis Karyawan
+    { wch: 24 }, // Golongan / Pangkat
+    { wch: 24 }, // Jarak Rumah ke Sekolah
     { wch: 16 }, // Jenis Kelamin
-    { wch: 18 }, // No HP Orang Tua / WA
+    { wch: 18 }, // No HP Guru / WA
     { wch: 16 }, // Tempat Lahir
-    { wch: 15 }, // Tanggal Lahir
-    { wch: 32 }, // Alamat
+    { wch: 16 }, // Tanggal Lahir
+    { wch: 30 }, // Alamat
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -121,7 +142,10 @@ export const parseStudentExcelFile = async (
           (c, idx) => idx !== birthPlaceIdx && (c.includes('tanggal') || c.includes('tgl lahir') || c.includes('tgl') || (c.includes('lahir') && !c.includes('tempat')))
         );
         let addressIdx = headerRow.findIndex((c) => c.includes('alamat') || c.includes('domisili') || c.includes('tinggal'));
-        let classIdx = headerRow.findIndex((c) => c.includes('kelas'));
+        let statusIdx = headerRow.findIndex((c) => c.includes('status') || c.includes('karyawan') || c.includes('kepegawaian'));
+        let rankIdx = headerRow.findIndex((c) => c.includes('gol') || c.includes('pangkat'));
+        let distanceIdx = headerRow.findIndex((c) => c.includes('jarak') || c.includes('distance'));
+        let classIdx = headerRow.findIndex((c) => c.includes('kelas') || c.includes('jabatan') || c.includes('tugas'));
         let genderIdx = headerRow.findIndex((c) => c.includes('kelamin') || c.includes('gender') || c.includes('jk'));
         let phoneIdx = headerRow.findIndex(
           (c) => c.includes('hp') || c.includes('phone') || c.includes('ortu') || c.includes('telepon') || c.includes('wa')
@@ -151,7 +175,10 @@ export const parseStudentExcelFile = async (
           const rawBirthPlace = birthPlaceIdx !== -1 ? String(row[birthPlaceIdx] ?? '').trim() : undefined;
           const rawBirthDate = birthDateIdx !== -1 ? String(row[birthDateIdx] ?? '').trim() : undefined;
           const rawAddress = addressIdx !== -1 ? String(row[addressIdx] ?? '').trim() : undefined;
-          const rawClass = String(row[classIdx] ?? '').trim() || defaultClass || '1-A';
+          const rawClass = String(row[classIdx] ?? '').trim() || defaultClass || 'Guru 1';
+          const rawStatus = statusIdx !== -1 ? String(row[statusIdx] ?? '').trim() : '';
+          const rawRank = rankIdx !== -1 ? String(row[rankIdx] ?? '').trim() : undefined;
+          const rawDistance = distanceIdx !== -1 ? String(row[distanceIdx] ?? '').trim() : undefined;
           let rawGender = String(row[genderIdx] ?? '').trim();
           const rawPhone = String(row[phoneIdx] ?? '').trim();
 
@@ -159,12 +186,12 @@ export const parseStudentExcelFile = async (
           if (!rawNis && !rawName) continue;
 
           if (!rawNis || !rawName) {
-            errors.push(`Baris ${i + 1}: NIS dan Nama siswa wajib diisi.`);
+            errors.push(`Baris ${i + 1}: NIP/NUPTK dan Nama guru wajib diisi.`);
             continue;
           }
 
           if (existingNisSet.has(rawNis)) {
-            errors.push(`Baris ${i + 1}: NIS "${rawNis}" (${rawName}) sudah ada di database, dilewati.`);
+            errors.push(`Baris ${i + 1}: NIP/NUPTK "${rawNis}" (${rawName}) sudah ada di database, dilewati.`);
             continue;
           }
 
@@ -175,9 +202,12 @@ export const parseStudentExcelFile = async (
           }
 
           const uniqueId = `std-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 8)}`;
+          const employmentStatus = normalizeEmploymentStatus(rawStatus);
 
           const newStudent: Student = {
             id: uniqueId,
+            nip: rawNis,
+            nuptk: rawNisn || undefined,
             nis: rawNis,
             nisn: rawNisn || undefined,
             name: rawName,
@@ -185,8 +215,13 @@ export const parseStudentExcelFile = async (
             birthDate: rawBirthDate || undefined,
             address: rawAddress || undefined,
             classRoom: rawClass,
+            position: rawClass,
+            employmentStatus: employmentStatus,
+            rankGrade: rawRank || undefined,
+            schoolDistance: rawDistance || undefined,
             gender: gender,
             parentPhone: rawPhone,
+            phone: rawPhone,
             avatarUrl: gender === 'Perempuan' ? FEMALE_AVATAR : MALE_AVATAR,
             createdAt: new Date().toISOString().split('T')[0],
           };
@@ -295,7 +330,9 @@ export const exportOfficialMonthlyRecapExcel = ({
 
   // Body: 4 rows per teacher
   sortedTeachers.forEach((teacher, idx) => {
-    const biodata = `${teacher.name}\nNUPTK: ${teacher.nuptk || '-'}\nNIP: ${teacher.nip || '-'}\nPangkat/Gol: ${teacher.rankGrade || '-'}\nAlamat: ${teacher.address || '-'}\nJarak: ${teacher.schoolDistance || '3.000 M'}`;
+    const golStr = teacher.rankGrade && teacher.rankGrade.trim() ? teacher.rankGrade : '-';
+    const jarakStr = teacher.schoolDistance && teacher.schoolDistance.trim() ? teacher.schoolDistance : '-';
+    const biodata = `${teacher.name}\nNUPTK: ${teacher.nuptk || '-'}\nNIP: ${teacher.nip || '-'}\nPangkat/Gol: ${golStr}\nAlamat: ${teacher.address || '-'}\nJarak: ${jarakStr}`;
     const ket = teacher.employmentStatus || 'PNS';
 
     // Sub-row 1: Paraf Masuk
