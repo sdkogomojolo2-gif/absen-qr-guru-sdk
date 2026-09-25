@@ -63,16 +63,23 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
   const [autoCheckOutWithIn, setAutoCheckOutWithIn] = useState<boolean>(
     settings.autoCheckOutWithIn !== false
   );
+  const [enableQuickBulkAttendance, setEnableQuickBulkAttendance] = useState<boolean>(
+    settings.enableQuickBulkAttendance !== false
+  );
   const [whatsappTargetPhone, setWhatsappTargetPhone] = useState<string>(
     settings.whatsappTargetPhone || ''
   );
   const [whatsappTargetName, setWhatsappTargetName] = useState<string>(
     settings.whatsappTargetName || 'Bapak Kepala Sekolah'
   );
+  const [returnStartTime, setReturnStartTime] = useState<string>(
+    settings.returnStartTime || settings.dailySchedules?.[1]?.returnStartTime || '14:00'
+  );
 
   // Helper untuk mengubah jadwal hari kerja
   const updateMondayThursdaySchedule = (field: 'lateCutoffTime' | 'returnStartTime', val: string) => {
     if (field === 'lateCutoffTime') setLateCutoffTime(val);
+    if (field === 'returnStartTime') setReturnStartTime(val);
     setDailySchedules((prev) => {
       const next = { ...prev };
       [1, 2, 3, 4].forEach((d) => {
@@ -193,10 +200,12 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
       schoolCity: schoolCity.trim() || 'Jakarta',
       academicYear: academicYear.trim() || '2025/2026',
       lateCutoffTime,
+      returnStartTime: returnStartTime || dailySchedules[1]?.returnStartTime || '14:00',
       entryTimeMode,
       dailySchedules,
       enablePhotoCapture,
       autoCheckOutWithIn,
+      enableQuickBulkAttendance,
       whatsappTargetPhone: whatsappTargetPhone.trim(),
       whatsappTargetName: whatsappTargetName.trim(),
       headmasterName: headmasterName.trim(),
@@ -711,6 +720,35 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              {/* Toggle Tombol Absen Cepat (Harian / 1 Bulan Penuh) */}
+              <div className="bg-white border border-amber-200 rounded-xl p-3 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${enableQuickBulkAttendance ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}`}>
+                    <i className="fa-solid fa-bolt"></i>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                      <span>Tombol Absen Cepat di Tab Rekapitulasi</span>
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+                        ⚡ Absen Kilat
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      Tampilkan tombol <strong>"⚡ Absen Cepat"</strong> di samping tombol <em>Atur Logo</em> pada Rekapitulasi Bulanan untuk mengabsen seluruh guru &amp; tendik sekaligus (bisa per tanggal tertentu atau 1 bulan penuh otomatis).
+                    </div>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={enableQuickBulkAttendance}
+                    onChange={(e) => setEnableQuickBulkAttendance(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
 

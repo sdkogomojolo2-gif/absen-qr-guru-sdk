@@ -8,6 +8,7 @@ import { filterAndSortTeachers } from '../utils/statusUtils';
 import { OfficialReportKop } from './OfficialReportKop';
 import { OfficialSignaturesBlock } from './OfficialSignaturesBlock';
 import { LogoSettingsModal } from './LogoSettingsModal';
+import { QuickBulkAttendanceModal } from './QuickBulkAttendanceModal';
 import { resolveAttendanceEntryTime, resolveAttendanceReturnTime } from '../utils/scheduleUtils';
 
 interface MonthlyRecapTabProps {
@@ -16,6 +17,7 @@ interface MonthlyRecapTabProps {
   settings: SystemSettings;
   currentTeacher?: Teacher | null;
   onSaveAttendanceRecord?: (record: AttendanceRecord) => void;
+  onBulkSaveAttendanceRecords?: (records: AttendanceRecord[]) => Promise<void> | void;
   onUpdateSettings?: (settings: SystemSettings) => void;
   onOpenRetroactiveAttendance?: (date?: string, teacherId?: string) => void;
 }
@@ -26,6 +28,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
   settings,
   currentTeacher,
   onSaveAttendanceRecord,
+  onBulkSaveAttendanceRecords,
   onUpdateSettings,
   onOpenRetroactiveAttendance,
 }) => {
@@ -53,6 +56,9 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
 
   // Modal for Managing Official Logos (Kabupaten & Dinas/Sekolah)
   const [isLogoModalOpen, setIsLogoModalOpen] = useState<boolean>(false);
+
+  // Modal for Quick Bulk Attendance (Absen Cepat Guru & Tendik)
+  const [isQuickBulkModalOpen, setIsQuickBulkModalOpen] = useState<boolean>(false);
 
   // Month days info
   const daysInfo: DayInfo[] = useMemo(() => {
@@ -312,6 +318,19 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
               <i className="fa-solid fa-image text-red-200"></i>
               <span>Atur Logo</span>
             </button>
+
+            {/* Tombol Absen Cepat (Tepat di samping Atur Logo, bisa diaktifkan/dinonaktifkan di Edit Profil) */}
+            {settings.enableQuickBulkAttendance !== false && (
+              <button
+                type="button"
+                onClick={() => setIsQuickBulkModalOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/40 transition-all active:scale-95 cursor-pointer border border-amber-300"
+                title="Absen cepat seluruh guru & tendik (Pilihan: 1 Hari atau 1 Bulan Penuh)"
+              >
+                <i className="fa-solid fa-bolt text-slate-950"></i>
+                <span>⚡ Absen Cepat</span>
+              </button>
+            )}
 
             {/* Export Excel (.xlsx) */}
             <button
@@ -911,6 +930,20 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
           settings={settings}
           onUpdateSettings={onUpdateSettings}
           onClose={() => setIsLogoModalOpen(false)}
+        />
+      )}
+
+      {/* Modal Absen Cepat (Harian & 1 Bulan Penuh) */}
+      {isQuickBulkModalOpen && onBulkSaveAttendanceRecords && (
+        <QuickBulkAttendanceModal
+          isOpen={isQuickBulkModalOpen}
+          onClose={() => setIsQuickBulkModalOpen(false)}
+          teachers={teachers}
+          attendanceRecords={attendanceRecords}
+          settings={settings}
+          selectedMonth={selectedMonth}
+          schoolId={settings.schoolId}
+          onBulkSaveAttendance={onBulkSaveAttendanceRecords}
         />
       )}
     </div>

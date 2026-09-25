@@ -82,22 +82,35 @@ export const getDayScheduleForDate = (
     dayIndex = 1;
   }
 
-  // Jika admin mengonfigurasi jadwal kustom per hari
-  if (settings?.dailySchedules && settings.dailySchedules[dayIndex]) {
-    return settings.dailySchedules[dayIndex];
-  }
+  // Jika admin mengonfigurasi jadwal kustom per hari (dukung index number maupun string key dari Firestore)
+  const customSched =
+    settings?.dailySchedules?.[dayIndex] ||
+    (settings?.dailySchedules as any)?.[String(dayIndex)];
 
-  // Fallback ke default, namun jika settings.lateCutoffTime umum diubah (dan bukan hari Jumat), sesuaikan
-  const base = DEFAULT_DAILY_SCHEDULES[dayIndex] || DEFAULT_DAILY_SCHEDULES[1];
-  if (dayIndex !== 5 && settings?.lateCutoffTime) {
+  if (customSched) {
     return {
-      ...base,
-      lateCutoffTime: settings.lateCutoffTime,
-      returnStartTime: settings.returnStartTime || base.returnStartTime,
+      ...customSched,
+      returnStartTime: customSched.returnStartTime || settings?.returnStartTime || (dayIndex === 5 ? '11:30' : '14:00'),
+      lateCutoffTime: customSched.lateCutoffTime || (dayIndex === 5 ? '07:00' : (settings?.lateCutoffTime || '07:15')),
     };
   }
 
-  return base;
+  // Fallback ke default, namun jika settings kustom diubah
+  const base = DEFAULT_DAILY_SCHEDULES[dayIndex] || DEFAULT_DAILY_SCHEDULES[1];
+  if (dayIndex !== 5) {
+    return {
+      ...base,
+      lateCutoffTime: settings?.lateCutoffTime || base.lateCutoffTime,
+      returnStartTime: settings?.returnStartTime || base.returnStartTime,
+    };
+  } else {
+    const jumatSched = (settings?.dailySchedules as any)?.['5'] || settings?.dailySchedules?.[5];
+    return {
+      ...base,
+      lateCutoffTime: jumatSched?.lateCutoffTime || base.lateCutoffTime,
+      returnStartTime: jumatSched?.returnStartTime || base.returnStartTime,
+    };
+  }
 };
 
 /**
@@ -222,6 +235,7 @@ export const resolveAttendanceEntryTime = (
 export const resolveAttendanceReturnTime = (
   record?: {
     timeOut?: string;
+    note?: string;
     status?: AttendanceStatus | string;
     date?: string;
   } | null,
@@ -229,8 +243,27 @@ export const resolveAttendanceReturnTime = (
 ): string => {
   if (!record) return '';
 
+  const schedule = getDayScheduleForDate(record.date || '', settings);
+  const scheduledReturn =
+    schedule.returnStartTime ||
+    settings?.returnStartTime ||
+    (schedule.day === 'Jumat' ? '11:30' : '14:00');
+
   if (record.timeOut && record.timeOut.trim()) {
     const raw = record.timeOut.trim();
+
+    // Deteksi apakah record merupakan hasil auto-checkout sistem:
+    // 1) Note berisi 'Otomatis Lengkap Sampai Jam Pulang'
+    // 2) ATAU autoCheckOutWithIn aktif DAN raw adalah default jam pulang sistem terdahulu (14:00 / 11:30 / 12:30 / scheduledReturn)
+    const isAutoCheckoutRecord =
+      Boolean(record.note && record.note.includes('Otomatis Lengkap Sampai Jam Pulang')) ||
+      (settings?.autoCheckOutWithIn !== false && (raw === '14:00' || raw === '11:30' || raw === '12:30' || raw === scheduledReturn));
+
+    if (isAutoCheckoutRecord) {
+      // Selalu ikuti jam pulang resmi sesuai jadwal yang baru dikonfigurasi admin!
+      return scheduledReturn;
+    }
+
     if (raw.includes(':')) {
       const parts = raw.split(':');
       return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
@@ -240,8 +273,7 @@ export const resolveAttendanceReturnTime = (
 
   // Jika hadir dan sistem otomatis checkout
   if (record.status === 'Hadir' || record.status === 'Terlambat') {
-    const schedule = getDayScheduleForDate(record.date || '', settings);
-    return schedule.returnStartTime || '14:00';
+    return scheduledReturn;
   }
 
   return '';

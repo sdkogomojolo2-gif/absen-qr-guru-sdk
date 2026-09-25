@@ -125,6 +125,7 @@ export interface SystemSettings {
   dailySchedules?: { [dayIndex: number]: WorkDaySchedule }; // Jadwal spesifik per hari kerja (Senin-Kamis, Jumat, Sabtu)
   enablePhotoCapture?: boolean; // Ambil foto bukti otomatis saat scan QR (default: true)
   autoCheckOutWithIn?: boolean; // Otomatis isi/centang absen pulang bersamaan saat absen pagi 1 kali (default: false/true)
+  enableQuickBulkAttendance?: boolean; // Tampilkan tombol Absen Cepat (Harian / Bulanan) di Rekapitulasi (default: true)
   whatsappTargetPhone?: string; // Nomor WA tujuan kirim rekap harian (Kepsek / Grup)
   whatsappTargetName?: string; // Nama pemilik nomor tujuan (e.g. "Bapak Kepala Sekolah", "Grup Guru")
   schoolName: string;

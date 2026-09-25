@@ -88,6 +88,30 @@ const LOCAL_STORAGE_KEYS = {
   CURRENT_TEACHER: 'absensi_siswa_current_teacher_v2',
   LEAVES: 'absensi_siswa_leaves_v1',
   BEHAVIOR_LOGS: 'absensi_siswa_behavior_logs_v1',
+  DELETED_GURU_IDS: 'absensi_siswa_deleted_guru_ids_v1',
+};
+
+const getDeletedGuruIds = (): Set<string> => {
+  try {
+    const saved = safeGetItem(LOCAL_STORAGE_KEYS.DELETED_GURU_IDS);
+    return saved ? new Set<string>(JSON.parse(saved)) : new Set<string>();
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const addDeletedGuruIds = (ids: string[]) => {
+  try {
+    const current = getDeletedGuruIds();
+    ids.forEach((id) => {
+      if (id && typeof id === 'string' && id.trim()) {
+        current.add(id.trim());
+      }
+    });
+    safeSetItem(LOCAL_STORAGE_KEYS.DELETED_GURU_IDS, JSON.stringify(Array.from(current)));
+  } catch (e) {
+    console.warn('Notice saving deleted guru ids:', e);
+  }
 };
 
 export default function App() {
@@ -150,8 +174,9 @@ export default function App() {
 
       const saved = safeGetItem(LOCAL_STORAGE_KEYS.STUDENTS);
       const parsed: Student[] = saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+      const deletedIds = getDeletedGuruIds();
 
-      const filtered = parsed.filter((s) => !isDummyGuruId(s.id));
+      const filtered = parsed.filter((s) => !isDummyGuruId(s.id) && !deletedIds.has(s.id));
 
       const seenIds = new Set<string>();
       const sanitized = filtered.map((s, index) => {
@@ -203,8 +228,11 @@ export default function App() {
       if (!saved) return INITIAL_TEACHERS;
 
       const parsed: Teacher[] = JSON.parse(saved);
+      const deletedIds = getDeletedGuruIds();
       const filtered = parsed.filter(
-        (t) => !['tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'tch-6', 'tch-7', 'tch-8'].includes(t.id)
+        (t) =>
+          !['tch-1', 'tch-2', 'tch-3', 'tch-4', 'tch-5', 'tch-6', 'tch-7', 'tch-8'].includes(t.id) &&
+          !deletedIds.has(t.id)
       );
 
       if (filtered.length === 0) return INITIAL_TEACHERS;
@@ -541,37 +569,21 @@ export default function App() {
       }
     });
 
-    // Subscribe to Firestore collections in real-time with safe merge to avoid data wipes
+    // Subscribe to Firestore collections in real-time
     const unsubStudents = subscribeToStudents((fsStudents) => {
       if (!fsStudents) return;
-      const validFs = fsStudents.filter((s) => !isDummyGuruId(s.id));
-      let missing: Student[] = [];
-      setStudents((prev) => {
-        const prevMap = new Map<string, Student>();
-        prev.filter((s) => !isDummyGuruId(s.id)).forEach((s) => prevMap.set(s.id, s));
+      const deletedIds = getDeletedGuruIds();
+      const validFs = fsStudents.filter((s) => !isDummyGuruId(s.id) && !deletedIds.has(s.id));
 
-        // Update/insert from Firestore with normalized schoolId
-        validFs.forEach((s) => {
-          const normalized: Student = {
-            ...s,
-            schoolId: s.schoolId || DEFAULT_PRIMARY_SCHOOL_ID,
-            classRoom: s.classRoom ? formatClassLabel(s.classRoom) : s.classRoom,
-          };
-          prevMap.set(normalized.id, normalized);
-        });
-
-        missing = prev.filter((p) => !isDummyGuruId(p.id) && !validFs.some((f) => f.id === p.id));
-        const merged = Array.from(prevMap.values());
-        safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(merged));
-        return merged;
+      setStudents(() => {
+        const normalized = validFs.map((s) => ({
+          ...s,
+          schoolId: s.schoolId || DEFAULT_PRIMARY_SCHOOL_ID,
+          classRoom: s.classRoom ? formatClassLabel(s.classRoom) : s.classRoom,
+        }));
+        safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(normalized));
+        return normalized;
       });
-
-      // Backfill to Firestore any students that exist locally but not yet in Firestore
-      if (missing.length > 0) {
-        syncAllStudentsToFirestore(missing).catch((err) =>
-          console.warn('Backfill students notice:', err)
-        );
-      }
     });
 
     const unsubAttendance = subscribeToAttendance((fsRecords) => {
@@ -623,36 +635,33 @@ export default function App() {
 
     const unsubTeachers = subscribeToTeachers((fsTeachers) => {
       if (!fsTeachers || fsTeachers.length === 0) return;
-      let missing: Teacher[] = [];
-      setTeachers((prev) => {
-        const prevMap = new Map<string, Teacher>();
-        prev.forEach((t) => prevMap.set(t.id, t));
+      const deletedIds = getDeletedGuruIds();
+      const validFs = fsTeachers.filter((t) => !deletedIds.has(t.id));
 
-        fsTeachers.forEach((t) => {
+      setTeachers(() => {
+        const list: Teacher[] = [];
+        const seenIds = new Set<string>();
+
+        validFs.forEach((t) => {
           let teacherObj: Teacher = { ...t, schoolId: t.schoolId || DEFAULT_PRIMARY_SCHOOL_ID };
           if ((t.id === 'tch-admin' || t.email?.toLowerCase() === 'fadli46046@gmail.com') && t.pin !== 'Hanin231221') {
             teacherObj = { ...teacherObj, pin: 'Hanin231221' };
             saveTeacherToFirestore(teacherObj).catch(console.warn);
           }
-          prevMap.set(teacherObj.id, teacherObj);
+          list.push(teacherObj);
+          seenIds.add(teacherObj.id);
         });
 
         INITIAL_TEACHERS.forEach((t) => {
-          if (!prevMap.has(t.id)) prevMap.set(t.id, t);
+          if (!seenIds.has(t.id) && !deletedIds.has(t.id)) {
+            list.push(t);
+            seenIds.add(t.id);
+          }
         });
 
-        missing = prev.filter((p) => !fsTeachers.some((f) => f.id === p.id));
-        const merged = Array.from(prevMap.values());
-        safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(merged));
-        return merged;
+        safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(list));
+        return list;
       });
-
-      // Backfill to Firestore any teachers that exist locally but not yet in Firestore
-      if (missing.length > 0) {
-        syncAllTeachersToFirestore(missing).catch((err) =>
-          console.warn('Backfill teachers notice:', err)
-        );
-      }
     });
 
     const unsubSettings = subscribeToSettings((fsSettings) => {
@@ -700,8 +709,47 @@ export default function App() {
       );
 
       safeSetItem(LOCAL_STORAGE_KEYS.SETTINGS, JSON.stringify(scopedSettings));
+
+      // Otomatis sinkronisasi record presensi auto-checkout yang ada agar jam pulangnya sesuai jadwal baru
+      setAttendanceRecords((prev) => {
+        let hasChanges = false;
+        const updated = prev.map((r) => {
+          const isAutoCheckoutRecord =
+            Boolean(r.note && r.note.includes('Otomatis Lengkap Sampai Jam Pulang')) ||
+            (scopedSettings.autoCheckOutWithIn !== false && (r.timeOut === '14:00' || r.timeOut === '11:30' || r.timeOut === '12:30'));
+
+          if (isAutoCheckoutRecord) {
+            const sched = getDayScheduleForDate(r.date || todayStr, scopedSettings);
+            const newReturnTime = sched.returnStartTime || scopedSettings.returnStartTime || '14:00';
+            if (r.timeOut !== newReturnTime) {
+              hasChanges = true;
+              const newNote = (r.note || '').replace(
+                /Otomatis Lengkap Sampai Jam Pulang \([^)]+\)/,
+                `Otomatis Lengkap Sampai Jam Pulang (${newReturnTime} WITA)`
+              );
+              return {
+                ...r,
+                timeOut: newReturnTime,
+                note: newNote.includes('Otomatis Lengkap Sampai Jam Pulang')
+                  ? newNote
+                  : `${r.note || ''} • Otomatis Lengkap Sampai Jam Pulang (${newReturnTime} WITA)`,
+              };
+            }
+          }
+          return r;
+        });
+
+        if (hasChanges) {
+          safeSetItem(LOCAL_STORAGE_KEYS.ATTENDANCE, JSON.stringify(updated));
+          syncAllAttendanceToFirestore(updated).catch((err) =>
+            console.warn('Sync updated return schedule to Firestore notice:', err)
+          );
+          return updated;
+        }
+        return prev;
+      });
     },
-    []
+    [todayStr]
   );
 
   // Teacher Login Handler
@@ -843,17 +891,28 @@ export default function App() {
 
   // Delete Teacher Handler
   const handleDeleteTeacher = (id: string) => {
+    addDeletedGuruIds([id]);
     const teacher = teachers.find((t) => t.id === id);
     if (!teacher) return;
 
-    setTeachers((prev) => prev.filter((t) => t.id !== id));
+    setTeachers((prev) => {
+      const updated = prev.filter((t) => t.id !== id);
+      safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(updated));
+      return updated;
+    });
+    setStudents((prev) => {
+      const updated = prev.filter((s) => s.id !== id && (!teacher.nip || s.nip !== teacher.nip));
+      safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(updated));
+      return updated;
+    });
     if (currentTeacher?.id === id) {
       setCurrentTeacher(teachers.find((t) => t.id !== id) || null);
     }
     deleteTeacherFromFirestore(id).catch((err) =>
       console.warn('Failed to delete teacher from Firestore:', err)
     );
-    addToast('Akun Dihapus', `Akun guru ${teacher.name} telah dihapus.`, 'info');
+    deleteStudentFromFirestore(id).catch(() => {});
+    addToast('Akun Dihapus', `Akun guru ${teacher.name} telah dihapus permanen.`, 'info');
   };
 
   // Calculate late status based on cutoff time
@@ -1139,6 +1198,48 @@ export default function App() {
     [addToast]
   );
 
+  // Bulk Save Attendance Records (From Quick Bulk Attendance)
+  const handleBulkSaveAttendanceRecords = useCallback(
+    async (newRecords: AttendanceRecord[]) => {
+      if (!newRecords || newRecords.length === 0) return;
+
+      setAttendanceRecords((prev) => {
+        const recordMap = new Map<string, AttendanceRecord>();
+        // Keep existing records
+        prev.forEach((r) => {
+          const gId = r.guruId || r.studentId || r.nip;
+          if (gId && r.date) {
+            recordMap.set(`${r.date}_${gId}`, r);
+          } else {
+            recordMap.set(r.id, r);
+          }
+        });
+        // Overwrite / merge with new records
+        newRecords.forEach((r) => {
+          const gId = r.guruId || r.studentId || r.nip;
+          if (gId && r.date) {
+            recordMap.set(`${r.date}_${gId}`, r);
+          } else {
+            recordMap.set(r.id, r);
+          }
+        });
+
+        const updated = Array.from(recordMap.values());
+        safeSetItem(LOCAL_STORAGE_KEYS.ATTENDANCE, JSON.stringify(updated));
+        return updated;
+      });
+
+      await syncAllAttendanceToFirestore(newRecords);
+
+      addToast(
+        'Absen Cepat Selesai',
+        `Berhasil memproses ${newRecords.length} rekaman presensi ke database.`,
+        'success'
+      );
+    },
+    [addToast]
+  );
+
   // Delete Attendance Record
   const handleDeleteRecord = (id: string) => {
     setAttendanceRecords((prev) => {
@@ -1382,27 +1483,41 @@ export default function App() {
   };
 
   const handleDeleteStudent = (id: string) => {
+    addDeletedGuruIds([id]);
     setStudents((prev) => {
       const updated = prev.filter((s) => s.id !== id);
       safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(updated));
       return updated;
     });
+    setTeachers((prev) => {
+      const updated = prev.filter((t) => t.id !== id);
+      safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(updated));
+      return updated;
+    });
     deleteStudentFromFirestore(id).catch((err) =>
       console.warn('Failed to delete student from Firestore:', err)
     );
-    addToast('Guru Dihapus', 'Data guru/PTK berhasil dihapus dari database.', 'info');
+    deleteTeacherFromFirestore(id).catch(() => {});
+    addToast('Guru Dihapus', 'Data guru/PTK berhasil dihapus permanen dari database.', 'info');
   };
 
   const handleBulkDeleteStudents = (ids: string[]) => {
+    addDeletedGuruIds(ids);
     const idSet = new Set(ids);
     setStudents((prev) => {
       const updated = prev.filter((s) => !idSet.has(s.id));
       safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(updated));
       return updated;
     });
+    setTeachers((prev) => {
+      const updated = prev.filter((t) => !idSet.has(t.id));
+      safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(updated));
+      return updated;
+    });
     bulkDeleteStudentsFromFirestore(ids).catch((err) =>
       console.warn('Failed to bulk delete students from Firestore:', err)
     );
+    ids.forEach((id) => deleteTeacherFromFirestore(id).catch(() => {}));
     addToast('Guru Dihapus', `${ids.length} data guru/PTK berhasil dihapus secara permanen.`, 'info');
   };
 
@@ -1624,6 +1739,7 @@ export default function App() {
                 settings={settings}
                 currentTeacher={currentTeacher}
                 onSaveAttendanceRecord={handleUpdateAttendanceRecord}
+                onBulkSaveAttendanceRecords={handleBulkSaveAttendanceRecords}
                 onUpdateSettings={handleUpdateSettings}
                 onOpenRetroactiveAttendance={(date, teacherId) => {
                   setRetroactiveInitialDate(date);

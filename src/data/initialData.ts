@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: SystemSettings = {
   dailySchedules: DEFAULT_DAILY_SCHEDULES,
   enablePhotoCapture: true,
   autoCheckOutWithIn: true,
+  enableQuickBulkAttendance: true,
   whatsappTargetPhone: '',
   whatsappTargetName: 'Kepala Sekolah / Grup Guru',
   schoolName: 'SDN Kecil Ogomojolo',
