@@ -1077,13 +1077,31 @@ export const exportOfficialMonthlyRecapPDF = ({
   // Right Column: Kepala Sekolah
   const rightSigX = pageWidth - 65;
   const now = new Date();
-  const dateFormatted =
-    signatureDate ||
-    now.toLocaleDateString('id-ID', {
+
+  // Resolving signature date: prefer explicit signatureDate, or calculate exact end of selectedMonth
+  let dateFormatted = signatureDate;
+  if (!dateFormatted && selectedMonth) {
+    try {
+      const [y, m] = selectedMonth.split('-').map(Number);
+      if (y && m) {
+        const lastDay = new Date(y, m, 0);
+        dateFormatted = lastDay.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
+      }
+    } catch {
+      // fallback
+    }
+  }
+  if (!dateFormatted) {
+    dateFormatted = now.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
+  }
   const city = settings.signatureCity || settings.schoolCity || 'Palasa Lambori';
   const headName = settings.headmasterName || 'RAHMAT, S.Pd., M.Pd';
   const headNip = formatCleanNIP(settings.headmasterNip || '19851204 200903 1 002');

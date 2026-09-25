@@ -4,11 +4,13 @@ import { SystemSettings } from '../types';
 interface OfficialSignaturesBlockProps {
   settings: SystemSettings;
   customDate?: string;
+  selectedMonth?: string;
 }
 
 export const OfficialSignaturesBlock: React.FC<OfficialSignaturesBlockProps> = ({
   settings,
   customDate,
+  selectedMonth,
 }) => {
   const city = settings.signatureCity || settings.schoolCity || 'Palasa Lambori';
   const headName = settings.headmasterName || 'RAHMAT, S.Pd., M.Pd';
@@ -19,13 +21,36 @@ export const OfficialSignaturesBlock: React.FC<OfficialSignaturesBlockProps> = (
   const korwilTitle = settings.korwilTitle || 'Koordinator Wilayah Satuan Pendidikan';
   const korwilKecamatan = settings.korwilKecamatan || 'Kecamatan Palasa';
 
-  const todayFormatted =
-    customDate ||
-    new Date().toLocaleDateString('id-ID', {
+  // Resolving signature date:
+  // 1. If customDate is provided, use it.
+  // 2. If selectedMonth (YYYY-MM) is provided, calculate the exact last day of that month (e.g. 31 Agustus 2026, 30 September 2026, etc.).
+  // 3. Fallback to current date.
+  const resolveSignatureDate = (): string => {
+    if (customDate) return customDate;
+    if (selectedMonth) {
+      try {
+        const [y, m] = selectedMonth.split('-').map(Number);
+        if (y && m) {
+          // day 0 of month m+1 is the last day of month m (since m in Date constructor is 0-indexed, new Date(y, m, 0) gives last day of month m)
+          const lastDay = new Date(y, m, 0);
+          return lastDay.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return new Date().toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
+  };
+
+  const todayFormatted = resolveSignatureDate();
 
   return (
     <div className="bg-white p-4 sm:p-6 text-slate-900 border-t border-slate-300 select-none">

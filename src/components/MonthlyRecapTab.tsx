@@ -789,7 +789,7 @@ export const MonthlyRecapTab: React.FC<MonthlyRecapTabProps> = ({
         </div>
 
         {/* Official Signatures Block: Korwil & Kepala Sekolah */}
-        <OfficialSignaturesBlock settings={settings} />
+        <OfficialSignaturesBlock settings={settings} selectedMonth={selectedMonth} />
       </div>
 
 

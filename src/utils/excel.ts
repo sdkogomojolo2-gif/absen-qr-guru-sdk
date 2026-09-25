@@ -421,11 +421,29 @@ export const exportOfficialMonthlyRecapExcel = ({
 
   // Signature Block
   const city = settings.signatureCity || settings.schoolCity || 'Palasa Lambori';
-  const todayFormatted = new Date().toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  let todayFormatted = '';
+  if (selectedMonth) {
+    try {
+      const [y, m] = selectedMonth.split('-').map(Number);
+      if (y && m) {
+        const lastDay = new Date(y, m, 0);
+        todayFormatted = lastDay.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
+      }
+    } catch {
+      // fallback
+    }
+  }
+  if (!todayFormatted) {
+    todayFormatted = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
   const korwilTitle = settings.korwilTitle || 'Koordinator Wilayah Satuan Pendidikan';
   const korwilKecamatan = settings.korwilKecamatan || 'Kecamatan Palasa';
   const korwilName = settings.korwilName || 'Drs. AGUSTAN, M.A.P';
