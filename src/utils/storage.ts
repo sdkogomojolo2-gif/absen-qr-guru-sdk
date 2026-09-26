@@ -4,15 +4,17 @@
  */
 
 export const STORAGE_KEYS = {
-  SCHOOLS: 'absensi_guru_schools_v3',
-  CURRENT_SCHOOL_ID: 'absensi_guru_current_school_id_v3',
-  GURU: 'absensi_guru_ptk_v3',
-  ATTENDANCE: 'absensi_guru_records_v3',
-  SETTINGS: 'absensi_guru_settings_v3',
-  TEACHERS: 'absensi_guru_teachers_v3',
-  CURRENT_TEACHER: 'absensi_guru_current_teacher_v3',
-  LEAVES: 'absensi_guru_leaves_v3',
-  BEHAVIOR_LOGS: 'absensi_guru_behavior_logs_v3',
+  SCHOOLS: 'absensi_siswa_schools_v1',
+  CURRENT_SCHOOL_ID: 'absensi_siswa_current_school_id_v1',
+  GURU: 'absensi_siswa_students_v2',
+  STUDENTS: 'absensi_siswa_students_v2',
+  ATTENDANCE: 'absensi_siswa_attendance_v2',
+  SETTINGS: 'absensi_siswa_settings_v1',
+  TEACHERS: 'absensi_siswa_teachers_v2',
+  CURRENT_TEACHER: 'absensi_siswa_current_teacher_v2',
+  LEAVES: 'absensi_siswa_leaves_v1',
+  BEHAVIOR_LOGS: 'absensi_siswa_behavior_logs_v1',
+  DELETED_GURU_IDS: 'absensi_guru_deleted_ids_v2',
   THEME: 'theme',
   ACTIVE_SYNC_CODE: 'absensi_guru_active_sync_code',
   LAST_CLOUD_SYNC_TIME: 'absensi_guru_last_sync_time',
@@ -25,12 +27,18 @@ const PROTECTED_STORAGE_KEYS = new Set(Object.values(STORAGE_KEYS));
 export function cleanStaleLocalStorage(): void {
   try {
     const keysToRemove: string[] = [];
+    const legacyKeysToDrop = new Set([
+      'absensi_siswa_students_v1',
+      'absensi_siswa_attendance_v1',
+      'absensi_siswa_teachers_v1',
+      'absensi_siswa_current_teacher_v1',
+    ]);
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && !PROTECTED_STORAGE_KEYS.has(key)) {
-        // Clear all old student database keys so data never mixes up
         if (
-          key.startsWith('absensi_siswa_') ||
+          legacyKeysToDrop.has(key) ||
           key.startsWith('absensi_cloud_sync_backup_') ||
           key.startsWith('temp_') ||
           key.startsWith('cache_')

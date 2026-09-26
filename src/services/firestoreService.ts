@@ -188,6 +188,11 @@ export async function deleteStudentFromFirestore(studentId: string): Promise<voi
   const path = `${COLLECTIONS.STUDENTS}/${studentId}`;
   try {
     await deleteDoc(doc(db, COLLECTIONS.STUDENTS, studentId));
+    try {
+      await deleteDoc(doc(db, COLLECTIONS.TEACHERS, studentId));
+    } catch {
+      // ignore
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -202,6 +207,7 @@ export async function bulkDeleteStudentsFromFirestore(studentIds: string[]): Pro
     const batch = writeBatch(db);
     studentIds.forEach((id) => {
       batch.delete(doc(db, COLLECTIONS.STUDENTS, id));
+      batch.delete(doc(db, COLLECTIONS.TEACHERS, id));
     });
     await batch.commit();
   } catch (error) {

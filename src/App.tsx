@@ -88,15 +88,17 @@ const LOCAL_STORAGE_KEYS = {
   CURRENT_TEACHER: 'absensi_siswa_current_teacher_v2',
   LEAVES: 'absensi_siswa_leaves_v1',
   BEHAVIOR_LOGS: 'absensi_siswa_behavior_logs_v1',
-  DELETED_GURU_IDS: 'absensi_siswa_deleted_guru_ids_v1',
+  DELETED_GURU_IDS: 'absensi_guru_deleted_ids_v2',
 };
 
 const getDeletedGuruIds = (): Set<string> => {
   try {
     const saved = safeGetItem(LOCAL_STORAGE_KEYS.DELETED_GURU_IDS);
-    return saved ? new Set<string>(JSON.parse(saved)) : new Set<string>();
+    const parsed = saved ? new Set<string>(JSON.parse(saved)) : new Set<string>();
+    parsed.add('std-1790217545836-o487cq8');
+    return parsed;
   } catch {
-    return new Set<string>();
+    return new Set<string>(['std-1790217545836-o487cq8']);
   }
 };
 
@@ -1483,14 +1485,15 @@ export default function App() {
   };
 
   const handleDeleteStudent = (id: string) => {
+    const target = students.find((s) => s.id === id);
     addDeletedGuruIds([id]);
     setStudents((prev) => {
-      const updated = prev.filter((s) => s.id !== id);
+      const updated = prev.filter((s) => s.id !== id && (!target?.nis || s.nis !== target.nis));
       safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(updated));
       return updated;
     });
     setTeachers((prev) => {
-      const updated = prev.filter((t) => t.id !== id);
+      const updated = prev.filter((t) => t.id !== id && (!target?.nis || t.nip !== target.nis));
       safeSetItem(LOCAL_STORAGE_KEYS.TEACHERS, JSON.stringify(updated));
       return updated;
     });
