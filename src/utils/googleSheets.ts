@@ -33,7 +33,7 @@ export async function createGoogleSpreadsheet(
         },
         {
           properties: {
-            title: 'Data Siswa',
+            title: 'Data Guru',
             gridProperties: { frozenRowCount: 1 },
           },
         },
@@ -54,7 +54,7 @@ export async function createGoogleSpreadsheet(
 }
 
 /**
- * Syncs full data (Attendance Records + Student List) to a Google Spreadsheet.
+ * Syncs full data (Attendance Records + Teacher List) to a Google Spreadsheet.
  */
 export async function exportToGoogleSheets(
   accessToken: string,
@@ -69,9 +69,9 @@ export async function exportToGoogleSheets(
       'No',
       'Tanggal',
       'Waktu WIB',
-      'NIS',
-      'Nama Siswa',
-      'Kelas',
+      'NIP/NUPTK',
+      'Nama Guru & Tendik',
+      'Jabatan / Tugas',
       'Status Kehadiran',
       'Keterangan',
       'Metode Scan',
@@ -91,15 +91,15 @@ export async function exportToGoogleSheets(
 
     const attendanceSheetValues = [attendanceHeader, ...attendanceRows];
 
-    // 2. Prepare "Data Siswa" rows
+    // 2. Prepare "Data Guru" rows
     const studentHeader = [
       'No',
-      'ID Siswa',
-      'NIS',
-      'Nama Lengkap',
-      'Kelas',
+      'ID Guru',
+      'NIP / NUPTK',
+      'Nama Lengkap & Gelar',
+      'Jabatan / Tugas',
       'Jenis Kelamin',
-      'No. HP Orang Tua / WA',
+      'No. WhatsApp',
       'Tanggal Terdaftar',
     ];
 
@@ -110,7 +110,7 @@ export async function exportToGoogleSheets(
       std.name,
       std.classRoom,
       std.gender,
-      std.parentPhone || '-',
+      std.parentPhone || std.phone || '-',
       std.createdAt,
     ]);
 
@@ -138,9 +138,9 @@ export async function exportToGoogleSheets(
       throw new Error(err.error?.message || 'Gagal memperbarui lembar "Rekap Absensi".');
     }
 
-    // 4. Update "Data Siswa"
+    // 4. Update "Data Guru"
     const updateStudentRes = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Data Siswa!A1?valueInputOption=USER_ENTERED`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Data Guru!A1?valueInputOption=USER_ENTERED`,
       {
         method: 'PUT',
         headers: {
@@ -148,7 +148,7 @@ export async function exportToGoogleSheets(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          range: 'Data Siswa!A1',
+          range: 'Data Guru!A1',
           majorDimension: 'ROWS',
           values: studentSheetValues,
         }),
@@ -157,7 +157,7 @@ export async function exportToGoogleSheets(
 
     if (!updateStudentRes.ok) {
       const err = await updateStudentRes.json().catch(() => ({}));
-      throw new Error(err.error?.message || 'Gagal memperbarui lembar "Data Siswa".');
+      throw new Error(err.error?.message || 'Gagal memperbarui lembar "Data Guru".');
     }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
@@ -166,7 +166,7 @@ export async function exportToGoogleSheets(
       success: true,
       spreadsheetId,
       spreadsheetUrl,
-      message: `Berhasil mengekspor ${attendanceRecords.length} catatan absensi & ${students.length} data siswa ke Google Sheets!`,
+      message: `Berhasil mengekspor ${attendanceRecords.length} catatan absensi & ${students.length} data guru ke Google Sheets!`,
     };
   } catch (error: any) {
     console.error('Google Sheets Sync Error:', error);

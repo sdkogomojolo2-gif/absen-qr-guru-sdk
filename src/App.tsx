@@ -781,9 +781,10 @@ export default function App() {
     // Add ?logout=true so that recipient device explicitly starts in logged-out mode
     shareUrl += '?logout=true';
 
+    const schoolName = settings.schoolName || 'SDN Kecil Ogomojolo';
     const shareData = {
-      title: 'Presensi Digital Siswa - SD Inpres 2 Ulatan',
-      text: 'Link Presensi Digital Siswa SD Inpres 2 Ulatan untuk Dewan Guru (Otomatis Logout/Guest untuk Keamanan):',
+      title: `Presensi Digital Guru & Tendik - ${schoolName}`,
+      text: `Link Presensi Digital Guru & Tendik ${schoolName} (Otomatis Logout/Guest untuk Keamanan):`,
       url: shareUrl,
     };
 

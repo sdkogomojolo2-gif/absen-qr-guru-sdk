@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Student, Gender, SystemSettings, Teacher, ScheduledLeave, BehaviorLog, EmploymentStatus } from '../types';
 import { StudentCardModal } from './StudentCardModal';
 import { BulkCardPrintModal } from './BulkCardPrintModal';
+import { TeacherListPrintModal } from './TeacherListPrintModal';
 import { MALE_BW_AVATAR, FEMALE_BW_AVATAR, getDefaultAvatar } from '../utils/avatars';
 import { SD_CLASSES } from '../data/initialData';
 import { downloadStudentImportTemplateExcel, parseStudentExcelFile } from '../utils/excel';
@@ -63,6 +64,8 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [bulkPrintSelectedIds, setBulkPrintSelectedIds] = useState<string[] | undefined>(undefined);
+  const [isPrintTeacherListOpen, setIsPrintTeacherListOpen] = useState(false);
+  const [printTeacherListSelectedIds, setPrintTeacherListSelectedIds] = useState<string[] | undefined>(undefined);
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
 
   // Behavior & Leave Modals in StudentsTab
@@ -72,7 +75,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   // Permission Logic:
   // - Admin: Akses penuh edit & hapus semua kelas
-  // - Wali Kelas: Hanya melihat & mengelola siswa di kelas binaannya sendiri (misal 1-A) agar tidak mengacak-acak data kelas lain
+  // - Wali Kelas: Hanya melihat & mengelola guru di kelas binaannya sendiri agar tidak mengacak-acak data lain
   // - Guru Mapel: Memiliki akses melihat semua kelas untuk keperluan presensi mata pelajaran, cetak kartu QR, dan notifikasi WA
   const isAdmin = currentTeacher?.role === 'admin' || currentTeacher?.teacherType === 'admin';
   const isWaliKelas = !isAdmin && (currentTeacher?.teacherType === 'wali_kelas' || Boolean(currentTeacher?.homeroomClass));
@@ -252,7 +255,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   const handleOpenBulkPrintSelected = () => {
     if (selectedStudentIds.size === 0) {
-      alert('Pilih minimal satu siswa untuk dicetak!');
+      alert('Pilih minimal satu guru untuk dicetak!');
       return;
     }
     setBulkPrintSelectedIds(Array.from(selectedStudentIds));
@@ -266,11 +269,11 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   const handleOpenBulkDelete = () => {
     if (selectedStudentIds.size === 0) {
-      alert('Pilih minimal satu siswa untuk dihapus!');
+      alert('Pilih minimal satu guru untuk dihapus!');
       return;
     }
     if (isGuruMapel) {
-      alert('Akun Guru Mapel tidak memiliki izin menghapus data siswa. Hanya Wali Kelas dan Admin yang berhak menghapus data.');
+      alert('Akun Guru Mapel tidak memiliki izin menghapus data guru. Hanya Administrator yang berhak menghapus data.');
       return;
     }
     setIsBulkDeleteModalOpen(true);
@@ -283,7 +286,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
     });
 
     if (idsToDelete.length === 0) {
-      alert('Anda tidak memiliki wewenang untuk menghapus siswa yang dipilih.');
+      alert('Anda tidak memiliki wewenang untuk menghapus guru yang dipilih.');
       setIsBulkDeleteModalOpen(false);
       return;
     }
@@ -300,7 +303,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
   const handleOpenAddForm = () => {
     if (isGuruMapel) {
-      alert('Akun Guru Mapel tidak memiliki wewenang menambah data siswa. Harap hubungi Guru Wali Kelas atau Administrator.');
+      alert('Akun Guru Mapel tidak memiliki wewenang menambah data guru. Harap hubungi Administrator.');
       return;
     }
     setEditingStudent(null);
@@ -327,9 +330,9 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
   const handleOpenEditForm = (student: Student) => {
     if (!canEditStudent(student)) {
       if (isGuruMapel) {
-        alert('Akun Guru Mata Pelajaran tidak memiliki izin mengedit data siswa. Hanya Wali Kelas dan Administrator yang berhak mengubah data siswa.');
+        alert('Akun Guru Mata Pelajaran tidak memiliki izin mengedit data guru. Hanya Administrator yang berhak mengubah data guru.');
       } else {
-        alert(`Anda adalah Wali Kelas ${myHomeroom}. Anda hanya berhak mengedit data siswa kelas ${myHomeroom}. Siswa ini terdaftar di kelas ${student.classRoom}.`);
+        alert(`Anda tidak memiliki izin mengedit data guru ini.`);
       }
       return;
     }
@@ -395,7 +398,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       const { students: parsedStudents, errors, addedCount } = await parseStudentExcelFile(file, defaultClass, students);
 
       if (parsedStudents.length === 0) {
-        alert('Gagal mengimpor file Excel: ' + (errors[0] || 'Tidak ada data siswa valid ditemukan di file Excel.'));
+        alert('Gagal mengimpor file Excel: ' + (errors[0] || 'Tidak ada data guru valid ditemukan di file Excel.'));
         return;
       }
 
@@ -419,12 +422,12 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
         });
       }
 
-      let msg = `Berhasil menambahkan ${addedCount} siswa baru secara otomatis dari file Excel!`;
+      let msg = `Berhasil menambahkan ${addedCount} data guru baru secara otomatis dari file Excel!`;
       if (errors.length > 0) {
         msg += `\n\nCatatan Peringatan:\n- ${errors.slice(0, 4).join('\n- ')}`;
       }
       alert(msg);
-      setImportStatus(`Berhasil mengimpor ${addedCount} siswa dari file Excel (${file.name}).`);
+      setImportStatus(`Berhasil mengimpor ${addedCount} data guru dari file Excel (${file.name}).`);
     } catch (err: any) {
       alert('Terjadi kesalahan saat memproses file Excel: ' + (err.message || 'Format tidak valid.'));
     } finally {
@@ -536,6 +539,19 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             <span>Cetak Kartu A4</span>
           </button>
 
+          {/* Cetak Daftar Guru Resmi Button */}
+          <button
+            onClick={() => {
+              setPrintTeacherListSelectedIds(undefined);
+              setIsPrintTeacherListOpen(true);
+            }}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+            title="Cetak Daftar Guru & Tenaga Kependidikan Resmi (Format A4 Lengkap dengan Kop & TTD Kepala Sekolah)"
+          >
+            <i className="fa-solid fa-file-invoice text-xs"></i>
+            <span>Cetak Daftar Guru</span>
+          </button>
+
           {/* Izin / Cuti Terjadwal Shortcut Button */}
           {onSaveLeave && (
             <button
@@ -580,7 +596,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
               Akses Guru Mata Pelajaran ({currentTeacher?.name} - {currentTeacher?.subject})
             </p>
             <p className="mt-0.5 text-[11px] text-sky-800 dark:text-sky-300">
-              Anda dapat melihat seluruh data siswa, memindai presensi QR, dan mencetak Kartu Pelajar Digital. Sesuai kebijakan sekolah, <strong>pengubahan dan penambahan data siswa hanya dapat dilakukan oleh Guru Wali Kelas masing-masing atau Administrator</strong>.
+              Anda dapat melihat seluruh data guru & tendik, memindai presensi QR, dan mencetak Kartu Identitas PTK. Sesuai kebijakan sekolah, <strong>pengubahan dan penambahan data guru hanya dapat dilakukan oleh Administrator</strong>.
             </p>
           </div>
         </div>
@@ -591,7 +607,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
           <div className="flex items-center gap-2">
             <i className="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
             <span>
-              Anda login sebagai <strong>Wali Kelas {myHomeroom}</strong>. Tampilan dan pengelolaan data secara khusus difokuskan hanya untuk siswa <strong>Kelas {myHomeroom}</strong> guna menjaga integritas data antar kelas.
+              Anda login sebagai <strong>Wali Kelas {myHomeroom}</strong>. Tampilan dan pengelolaan data difokuskan untuk guru binaan guna menjaga integritas data sekolah.
             </span>
           </div>
           <span className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-bold text-[11px] shrink-0 ml-2">
@@ -810,6 +826,18 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
               >
                 <i className="fa-solid fa-print text-xs"></i>
                 <span>Cetak Kartu A4 (2x4) ({selectedStudentIds.size})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPrintTeacherListSelectedIds(Array.from(selectedStudentIds));
+                  setIsPrintTeacherListOpen(true);
+                }}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                title="Cetak Daftar Guru Dicentang dalam Format Tabel Resmi"
+              >
+                <i className="fa-solid fa-file-invoice text-xs"></i>
+                <span>Cetak Daftar ({selectedStudentIds.size})</span>
               </button>
               {!isGuruMapel && (
                 <button
@@ -1631,6 +1659,19 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
           onClose={() => {
             setIsLeaveModalOpen(false);
             setTargetStudentForModal(null);
+          }}
+        />
+      )}
+
+      {/* Official Teacher List Printable Modal */}
+      {isPrintTeacherListOpen && (
+        <TeacherListPrintModal
+          students={students}
+          settings={settings}
+          selectedIds={printTeacherListSelectedIds}
+          onClose={() => {
+            setIsPrintTeacherListOpen(false);
+            setPrintTeacherListSelectedIds(undefined);
           }}
         />
       )}

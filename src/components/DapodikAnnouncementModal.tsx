@@ -270,7 +270,7 @@ export const DapodikAnnouncementModal: React.FC<DapodikAnnouncementModalProps> =
                 Kepada Yth. Bapak/Ibu Kepala Sekolah, Guru, Wali Kelas, dan Operator:
               </p>
               <p className="text-[12px] sm:text-xs text-amber-800/90 dark:text-amber-300/80">
-                Sistem absensi sekolah telah diperbarui dengan penyempurnaan antarmuka, kenyamanan navigasi, dan optimalisasi kinerja pemindaian QR Code siswa.
+                Sistem absensi sekolah telah diperbarui dengan penyempurnaan antarmuka, kenyamanan navigasi, dan optimalisasi kinerja pemindaian QR Code guru & tendik.
               </p>
             </div>
           </div>
@@ -321,7 +321,7 @@ export const DapodikAnnouncementModal: React.FC<DapodikAnnouncementModalProps> =
                     2. Navigasi Samping Terkunci (Sticky Sidebar)
                   </h4>
                   <p className="text-[11px] text-slate-600 dark:text-emerald-200/80 mt-0.5 leading-normal">
-                    Panel navigasi samping kiri kini terkunci di tempatnya (tidak ikut bergeser/tergulung saat tabel data siswa di-scroll ke bawah).
+                    Panel navigasi samping kiri kini terkunci di tempatnya (tidak ikut bergeser/tergulung saat tabel data guru di-scroll ke bawah).
                   </p>
                 </div>
               </div>
@@ -366,7 +366,7 @@ export const DapodikAnnouncementModal: React.FC<DapodikAnnouncementModalProps> =
                     5. Sinkronisasi Cloud Firestore & Penyimpanan Aman
                   </h4>
                   <p className="text-[11px] text-slate-600 dark:text-emerald-200/80 mt-0.5 leading-normal">
-                    Seluruh presensi dan kartu identitas siswa tersimpan aman di cloud Firebase serta dapat dicadangkan kapan saja.
+                    Seluruh presensi dan kartu identitas guru tersimpan aman di cloud Firebase serta dapat dicadangkan kapan saja.
                   </p>
                 </div>
               </div>

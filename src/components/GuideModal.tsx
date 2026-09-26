@@ -164,7 +164,7 @@ export const GuideModal: React.FC<GuideModalProps> = ({ onClose, onOpenCloudSync
                     <span>Opsi 2: Kode Sinkronisasi Cloud (Cloud Sync Code)</span>
                   </div>
                   <p className="text-slate-600">
-                    Admin memberikan <strong>Kode Sync</strong> (contoh: <code>SD-74821</code>) kepada guru. Guru dapat memuat database siswa terbaru atau mengirim data kehadiran menggunakan kode tersebut.
+                    Admin memberikan <strong>Kode Sync</strong> (contoh: <code>SD-74821</code>) kepada guru. Guru dapat memuat database guru terbaru atau mengirim data kehadiran menggunakan kode tersebut.
                   </p>
                 </div>
               </div>
@@ -208,10 +208,10 @@ export const GuideModal: React.FC<GuideModalProps> = ({ onClose, onOpenCloudSync
                 <div className="p-3 bg-white rounded-2xl border border-slate-200">
                   <h5 className="font-bold text-slate-900 flex items-center gap-1.5">
                     <i className="fa-solid fa-user-lock text-indigo-600 text-xs"></i>
-                    <span>Privasi Data Siswa & Penyimpanan Lokal</span>
+                    <span>Privasi Data Guru & Penyimpanan Lokal</span>
                   </h5>
                   <p className="text-slate-600 mt-0.5">
-                    Data siswa dan absensi disimpan secara aman di storage peramban (LocalStorage) dan terisolasi dari pihak luar. Tidak ada kebocoran data ke pihak ketiga yang tidak berwenang.
+                    Data guru dan absensi disimpan secara aman di storage peramban (LocalStorage) dan terisolasi dari pihak luar. Tidak ada kebocoran data ke pihak ketiga yang tidak berwenang.
                   </p>
                 </div>
 
@@ -245,10 +245,10 @@ export const GuideModal: React.FC<GuideModalProps> = ({ onClose, onOpenCloudSync
                   <strong className="text-slate-900">Sesuaikan Profil Sekolah & Admin:</strong> Buka tombol <em>"Edit Profil Admin"</em> dan ubah Nama Sekolah, Alamat, serta Tahun Ajaran sesuai sekolah klien Anda.
                 </li>
                 <li>
-                  <strong className="text-slate-900">Impor Data Siswa Sekolah:</strong> Minta data siswa dari operator TU sekolah (format Excel .xlsx / .xls), lalu unggah via tab <em>"Kelola Siswa & QR"</em>.
+                  <strong className="text-slate-900">Impor Data Guru Sekolah:</strong> Minta data guru/PTK dari operator TU sekolah (format Excel .xlsx / .xls), lalu unggah via tab <em>"Kelola Guru & QR"</em>.
                 </li>
                 <li>
-                  <strong className="text-slate-900">Cetak Kartu QR Siswa:</strong> Klik <em>"Cetak Kartu QR"</em> untuk mencetak kartu absensi siswa (ID Card / Kartu Pelajar) dalam format PDF/Kertas A4.
+                  <strong className="text-slate-900">Cetak Kartu QR Guru:</strong> Klik <em>"Cetak Kartu QR"</em> untuk mencetak kartu absensi guru (ID Card / Kartu PTK) dalam format PDF/Kertas A4.
                 </li>
                 <li>
                   <strong className="text-slate-900">Daftarkan Akun Guru Sekolah:</strong> Masukkan daftar email guru-guru yang akan bertugas memindai absensi di kelas atau gerbang sekolah.

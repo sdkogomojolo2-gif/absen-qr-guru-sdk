@@ -127,7 +127,7 @@ export const ScheduledLeaveModal: React.FC<ScheduledLeaveModalProps> = ({
 
     const targetStudent = students.find((s) => s.id === selectedStudentId);
     if (!targetStudent) {
-      setFormError('Data siswa tidak ditemukan.');
+      setFormError('Data guru tidak ditemukan.');
       return;
     }
 
@@ -140,16 +140,16 @@ export const ScheduledLeaveModal: React.FC<ScheduledLeaveModalProps> = ({
       type: leaveType,
       startDate,
       endDate,
-      reason: reason.trim() || `Izin/Sakit selama ${durationDays} hari`,
+      reason: reason.trim() || `Izin/Cuti/Sakit selama ${durationDays} hari`,
       attachmentPhoto: attachmentPhoto || undefined,
       createdAt: new Date().toISOString(),
-      recordedBy: currentTeacher?.name || 'Wali Kelas',
+      recordedBy: currentTeacher?.name || 'Administrator',
       status: 'Aktif',
     };
 
     onSaveLeave(newLeave, autoPopulate);
     setFormSuccess(
-      `Permohonan ${leaveType} ananda ${targetStudent.name} (${durationDays} hari) berhasil dicatat!`
+      `Permohonan ${leaveType} Bapak/Ibu ${targetStudent.name} (${durationDays} hari) berhasil dicatat!`
     );
 
     // Reset Form
@@ -189,12 +189,13 @@ export const ScheduledLeaveModal: React.FC<ScheduledLeaveModalProps> = ({
   // Send WA Confirmation to Parent
   const handleSendWA = (leave: ScheduledLeave) => {
     const student = students.find((s) => s.id === leave.studentId);
-    if (!student || !student.parentPhone) {
-      alert('Nomor HP Orang Tua belum terdaftar untuk siswa ini.');
+    if (!student || (!student.phone && !student.parentPhone)) {
+      alert('Nomor HP/WhatsApp belum terdaftar untuk guru ini.');
       return;
     }
 
-    const formatted = formatPhoneNumberForWA(student.parentPhone);
+    const rawPhone = student.phone || student.parentPhone || '';
+    const formatted = formatPhoneNumberForWA(rawPhone);
     const msg = generateWALeaveMessage(student, leave, settings.schoolName);
     const url = `https://wa.me/${formatted}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -468,7 +469,7 @@ export const ScheduledLeaveModal: React.FC<ScheduledLeaveModalProps> = ({
                       Otomatis Catat Presensi Harian ({leaveType})
                     </strong>
                     <span className="text-slate-500 dark:text-slate-400">
-                      Sistem akan langsung mengisi data absensi harian siswa sebagai "{leaveType}" untuk rentang tanggal {startDate} s/d {endDate}.
+                      Sistem akan langsung mengisi data absensi harian guru sebagai "{leaveType}" untuk rentang tanggal {startDate} s/d {endDate}.
                     </span>
                   </label>
                 </div>

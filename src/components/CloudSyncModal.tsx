@@ -589,7 +589,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                     </span>
                   </div>
                   <p className="text-[11px] text-emerald-800 mt-0.5 leading-snug">
-                    Tersedia cadangan awan lengkap <strong>132 Siswa</strong>, <strong>9 Guru</strong>, dan profil <strong>SDN KECIL OGOMOJOLO</strong>.
+                    Tersedia cadangan awan lengkap data Guru & Tendik dan profil <strong>SDN KECIL OGOMOJOLO</strong>.
                   </p>
                   <button
                     type="button"
@@ -602,7 +602,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                       if (result.success && result.payload) {
                         if (
                           confirm(
-                            `Pulihkan seluruh data SDK Ogomojolo (${result.payload.students.length} Siswa, ${result.payload.teachers.length} Guru, dan Pengaturan Sekolah)?`
+                            `Pulihkan seluruh data SDK Ogomojolo (${result.payload.students.length} Guru/PTK dan Pengaturan Sekolah)?`
                           )
                         ) {
                           onRestoreData({
@@ -615,7 +615,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
                           safeSetItem('absensi_last_cloud_sync_time', result.payload.lastSyncedAt);
                           setSyncCode('SD-3NGT6');
                           setLastSyncTime(result.payload.lastSyncedAt);
-                          onShowToast('Data Ogomojolo Berhasil Dipulihkan!', `Berhasil mengembalikan 132 data siswa dan profil SDN Kecil Ogomojolo.`, 'success');
+                          onShowToast('Data Ogomojolo Berhasil Dipulihkan!', `Berhasil mengembalikan data guru dan profil SDN Kecil Ogomojolo.`, 'success');
                           onClose();
                         }
                       } else {

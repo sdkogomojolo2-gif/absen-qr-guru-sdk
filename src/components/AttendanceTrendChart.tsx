@@ -170,7 +170,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <span>Hadir Tepat Waktu:</span>
               </span>
-              <span className="font-bold font-mono">{data.hadir} siswa</span>
+              <span className="font-bold font-mono">{data.hadir} guru</span>
             </div>
 
             <div className="flex items-center justify-between text-amber-400">
@@ -178,7 +178,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
                 <span className="w-2 h-2 rounded-full bg-amber-400"></span>
                 <span>Terlambat:</span>
               </span>
-              <span className="font-bold font-mono">{data.terlambat} siswa</span>
+              <span className="font-bold font-mono">{data.terlambat} guru</span>
             </div>
 
             <div className="flex items-center justify-between text-sky-400">
@@ -186,7 +186,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
                 <span className="w-2 h-2 rounded-full bg-sky-400"></span>
                 <span>Izin / Sakit:</span>
               </span>
-              <span className="font-bold font-mono">{data.izinSakit} siswa</span>
+              <span className="font-bold font-mono">{data.izinSakit} guru</span>
             </div>
 
             <div className="flex items-center justify-between text-rose-400">
@@ -194,14 +194,14 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
                 <span className="w-2 h-2 rounded-full bg-rose-400"></span>
                 <span>Alpa:</span>
               </span>
-              <span className="font-bold font-mono">{data.alpa} siswa</span>
+              <span className="font-bold font-mono">{data.alpa} guru</span>
             </div>
           </div>
 
           <div className="border-t border-slate-700/60 pt-1.5 flex items-center justify-between text-[11px] text-slate-400">
             <span>Total Kehadiran:</span>
             <span className="font-bold text-white font-mono">
-              {data.totalHadir} / {data.totalSiswa} siswa
+              {data.totalHadir} / {data.totalSiswa} guru
             </span>
           </div>
         </div>
@@ -227,13 +227,13 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Grafik pemantauan fluktuasi kehadiran, ketepatan waktu, dan izin siswa selama seminggu terakhir.
+            Grafik pemantauan fluktuasi kehadiran, ketepatan waktu, dan izin guru selama seminggu terakhir.
           </p>
         </div>
 
         {/* View Switchers */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Metric Selector (Jumlah Siswa vs Persentase %) */}
+          {/* Metric Selector (Jumlah Guru vs Persentase %) */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300">
             <button
               type="button"
@@ -245,7 +245,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
               }`}
             >
               <i className="fa-solid fa-users text-[10px]"></i>
-              <span>Jumlah Siswa</span>
+              <span>Jumlah Guru</span>
             </button>
             <button
               type="button"
@@ -318,7 +318,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
               Tepat Waktu (7 Hari)
             </span>
             <span className="font-bold text-slate-800 dark:text-slate-100 font-mono">
-              {summaryMetrics.totalOnTime} siswa
+              {summaryMetrics.totalOnTime} guru
             </span>
           </div>
         </div>

@@ -127,7 +127,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     const teacherEmail = matchedTeacher?.email || forgotEmail;
     const nipInfo = matchedTeacher?.nip ? ` (NIP: ${matchedTeacher.nip})` : '';
 
-    return `Halo Admin/Kepala Sekolah *${schoolName}*,\n\nSaya *${teacherName}*${nipInfo}\nEmail: ${teacherEmail}\n\nSaya memerlukan informasi/reset PIN untuk login ke Aplikasi Presensi Siswa. Mohon bantuannya.\n\nTerima kasih.`;
+    return `Halo Admin/Kepala Sekolah *${schoolName}*,\n\nSaya *${teacherName}*${nipInfo}\nEmail: ${teacherEmail}\n\nSaya memerlukan informasi/reset PIN untuk login ke Aplikasi Presensi Guru & Tendik. Mohon bantuannya.\n\nTerima kasih.`;
   };
 
   const handleOpenWhatsAppAdmin = () => {
@@ -308,7 +308,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 text-center">
               <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1.5">
                 <i className="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
-                <span>Sistem Presensi Siswa Terverifikasi • SD Inpres 2 Ulatan</span>
+                <span>Sistem Presensi Guru & Tendik Terverifikasi • SD Inpres 2 Ulatan</span>
               </p>
             </div>
           </div>

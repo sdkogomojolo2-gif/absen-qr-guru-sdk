@@ -405,10 +405,10 @@ export const ScannerTab: React.FC<ScannerTabProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
             <i className="fa-solid fa-camera-retro text-rose-600"></i>
-            <span>Pemindai QR Code Presensi Siswa SD</span>
+            <span>Pemindai QR Code Presensi Guru & Tendik</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Arahkan Kartu QR Pelajar ke kamera, atau unggah foto QR untuk mencatat jam masuk secara otomatis.
+            Arahkan Kartu QR Guru / PTK ke kamera, atau unggah foto QR untuk mencatat kehadiran secara otomatis.
           </p>
         </div>
 

@@ -461,7 +461,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <button
                 onClick={onOpenERaporSync}
                 className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer border border-emerald-500/40"
-                title="Sinkronisasi Rekap Kehadiran Siswa ke Aplikasi e-Rapor Merdeka (iihh Beres)"
+                title="Sinkronisasi Rekap Kehadiran Guru & Tendik ke Aplikasi e-Rapor Merdeka (iihh Beres)"
               >
                 <i className="fa-solid fa-cloud-arrow-up text-[11px]"></i>
                 <span>Kirim Rekap ke e-Rapor</span>
@@ -1006,7 +1006,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   type="button"
                   onClick={onOpenERaporSync}
                   className="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer border-l border-slate-200 dark:border-slate-700 ml-1 pl-2.5"
-                  title="Kirim Rekap Kehadiran Siswa ke e-Rapor Merdeka (iihh Beres)"
+                  title="Kirim Rekap Kehadiran Guru & Tendik ke e-Rapor Merdeka (iihh Beres)"
                 >
                   <i className="fa-solid fa-cloud-arrow-up text-xs"></i>
                   <span>Kirim ke e-Rapor</span>

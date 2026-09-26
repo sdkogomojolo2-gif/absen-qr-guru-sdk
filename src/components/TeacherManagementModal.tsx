@@ -390,9 +390,9 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
                   <option value="kepala_sekolah">Kepala Sekolah (Bisa Absensi, Kelola Semua Kelas & TTD Utama)</option>
-                  <option value="wali_kelas">Guru Wali Kelas (Bisa Edit Siswa Kelasnya & TTD Laporan)</option>
+                  <option value="wali_kelas">Guru / Wali Kelas (Bisa Kelola Presensi & TTD Laporan)</option>
                   <option value="guru_mapel">Guru Mapel (Hanya Lihat Presensi & Scan QR)</option>
-                  <option value="admin">Administrator Sekolah (Akses Penuh Semua Kelas)</option>
+                  <option value="admin">Administrator Sekolah (Akses Penuh Semua Fitur)</option>
                 </select>
               </div>
 
@@ -424,15 +424,15 @@ export const TeacherManagementModal: React.FC<TeacherManagementModalProps> = ({
                   </span>
                 ) : teacherType === 'wali_kelas' ? (
                   <span>
-                    <strong>Wali Kelas {homeroomClass}:</strong> Berhak mengedit siswa kelas <strong>{homeroomClass}</strong>. Nama dan NIP akan otomatis tertera di tanda tangan laporan presensi.
+                    <strong>Wali Kelas {homeroomClass}:</strong> Berhak mengelola presensi kelas <strong>{homeroomClass}</strong>. Nama dan NIP akan otomatis tertera di tanda tangan laporan presensi.
                   </span>
                 ) : teacherType === 'guru_mapel' ? (
                   <span>
-                    <strong>Guru Mapel:</strong> Hanya dapat melihat presensi dan memindai QR kartu. Tidak dapat mengubah biodata siswa.
+                    <strong>Guru Mapel:</strong> Hanya dapat melihat presensi dan memindai QR kartu. Tidak dapat mengubah biodata guru lain.
                   </span>
                 ) : (
                   <span>
-                    <strong>Admin Sekolah:</strong> Memiliki wewenang mengelola data seluruh siswa dan mengatur akun guru di sekolah ini.
+                    <strong>Admin Sekolah:</strong> Memiliki wewenang mengelola data seluruh guru & tendik dan mengatur akun guru di sekolah ini.
                   </span>
                 )}
               </div>

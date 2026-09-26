@@ -384,7 +384,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
     });
 
     if (itemsToSync.length === 0) {
-      alert('Pilih minimal satu siswa untuk disinkronkan ke e-Rapor Merdeka!');
+      alert('Pilih minimal satu guru untuk disinkronkan ke e-Rapor Merdeka!');
       return;
     }
 
@@ -411,12 +411,12 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
         : `ke database mandiri SD Inpres 2 Ulatan (koneksi lama Ogomojolo diputuskan)`;
 
       setSyncSuccessMessage(
-        `Berhasil mengirim rekap absensi (${res.count} siswa) & data profil siswa (${res.studentCount} siswa) ${targetMsg}! Disimpan di koleksi 'rekap_absensi_ulatan', 'students', dan 'data_siswa' (ID Dokumen: NISN Siswa).`
+        `Berhasil mengirim rekap absensi (${res.count} guru) & data profil guru (${res.studentCount} guru) ${targetMsg}! Disimpan di koleksi 'rekap_absensi_ulatan', 'students', dan 'data_siswa' (ID Dokumen: NIP Guru).`
       );
       if (onSuccessToast) {
         onSuccessToast(
           'Sinkronisasi Rekap Berhasil',
-          `${res.count} rekap kehadiran (${effectivePeriodeLabel}) & data siswa telah tersimpan aman.`
+          `${res.count} rekap kehadiran (${effectivePeriodeLabel}) & data guru telah tersimpan aman.`
         );
       }
     } catch (err: any) {
@@ -505,7 +505,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Sinkronisasi Rekap Kehadiran & Data Siswa ke e-Rapor Merdeka
+                  Sinkronisasi Rekap Kehadiran & Data Guru ke e-Rapor Merdeka
                 </h2>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-400 text-slate-950 uppercase tracking-wide">
                   iihh Beres
@@ -518,7 +518,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-emerald-100/80 leading-relaxed">
-                Kirim rekap absensi fleksibel (per bulan, rentang tanggal, atau semester) dan data profil lengkap siswa langsung ke Google Cloud Firestore aplikasi e-Rapor Merdeka.
+                Kirim rekap absensi fleksibel (per bulan, rentang tanggal, atau semester) dan data profil lengkap guru langsung ke Google Cloud Firestore aplikasi e-Rapor Merdeka.
               </p>
             </div>
           </div>
@@ -682,7 +682,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                 onChange={(e) => setSelectedClass(e.target.value)}
                 className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               >
-                <option value="Semua">Semua Kelas ({students.length} Siswa)</option>
+                <option value="Semua">Semua Guru ({students.length} Guru)</option>
                 {classesList.map((cls) => (
                   <option key={cls} value={cls}>
                     Kelas {cls}
@@ -699,7 +699,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               onClick={handleFetchCloudRecords}
               disabled={isCheckingCloud}
               className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              title="Periksa data rekap dan profil siswa yang tersimpan di Firestore e-Rapor"
+              title="Periksa data rekap dan profil guru yang tersimpan di Firestore e-Rapor"
             >
               {isCheckingCloud ? (
                 <i className="fa-solid fa-circle-notch fa-spin text-emerald-500"></i>
@@ -713,7 +713,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               type="button"
               onClick={handleDownloadJsonBackup}
               className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Unduh seluruh rekap & data siswa dalam format JSON"
+              title="Unduh seluruh rekap & data guru dalam format JSON"
             >
               <i className="fa-solid fa-download text-indigo-500"></i>
               <span>Unduh JSON</span>
@@ -821,7 +821,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               <span className="flex items-center gap-2">
                 <i className="fa-solid fa-circle-notch fa-spin text-emerald-600"></i>
                 <span>
-                  Mengunggah rekap absensi & data siswa ({syncProgress.current} / {syncProgress.total})...
+                  Mengunggah rekap absensi & data guru ({syncProgress.current} / {syncProgress.total})...
                 </span>
               </span>
               <span>{Math.round((syncProgress.current / syncProgress.total) * 100)}%</span>
@@ -879,7 +879,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     Database e-Rapor (iihh Beres):{' '}
                     <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{cloudRecords.length} Rekap</span> &{' '}
-                    <span className="text-teal-600 dark:text-teal-400 font-extrabold">{cloudStudentCount} Data Siswa</span>
+                    <span className="text-teal-600 dark:text-teal-400 font-extrabold">{cloudStudentCount} Data Guru</span>
                   </h4>
                 </div>
                 <button
@@ -891,7 +891,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               </div>
               {cloudRecords.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">
-                  Belum ada dokumen yang tersimpan di koleksi `rekap_absensi_ogomojolo`. Silakan klik tombol &quot;Kirim Rekap & Data Siswa ke e-Rapor&quot; untuk mengunggah.
+                  Belum ada dokumen yang tersimpan di koleksi `rekap_absensi_ogomojolo`. Silakan klik tombol &quot;Kirim Rekap & Data Guru ke e-Rapor&quot; untuk mengunggah.
                 </p>
               ) : (
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
@@ -946,7 +946,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">
-                Daftar Rekap Siswa ({studentRecapList.length} Siswa,{' '}
+                Daftar Rekap Guru ({studentRecapList.length} Guru,{' '}
                 <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                   {selectedStudentIds.size} dipilih
                 </span>
@@ -1034,11 +1034,11 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                             student && handleUpdateOverride(student.id, 'nisn', e.target.value)
                           }
                           className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                          placeholder="NISN Siswa"
+                          placeholder="NIP Guru"
                         />
                       </td>
 
-                      {/* Nama Siswa */}
+                      {/* Nama Guru */}
                       <td className="py-2.5 px-4 font-bold text-slate-900 dark:text-white">
                         <div className="flex flex-col">
                           <span>{recap.namaSiswa}</span>
@@ -1142,7 +1142,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               <strong className="text-slate-800 dark:text-slate-200 font-mono">
                 {configuredTargetDbId || 'SD Inpres 2 Ulatan (Lokal Cloud - Terputus dari Ogomojolo)'}
               </strong>{' '}
-              | ID Dokumen: NISN Siswa.
+              | ID Dokumen: NIP Guru.
             </span>
           </div>
 
@@ -1169,7 +1169,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
               ) : (
                 <>
                   <i className="fa-solid fa-cloud-arrow-up"></i>
-                  <span>Kirim Rekap & Data Siswa ({selectedStudentIds.size} Siswa)</span>
+                  <span>Kirim Rekap & Data Guru ({selectedStudentIds.size} Guru)</span>
                 </>
               )}
             </button>
@@ -1217,12 +1217,12 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                       : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                   }`}
                 >
-                  2. Data Profil Siswa (`data_siswa` / `students`)
+                  2. Data Profil Guru (`data_siswa` / `students`)
                 </button>
               </div>
 
               <p className="text-xs text-slate-400 mb-2">
-                Siswa: <strong className="text-emerald-300">{previewRecap.namaSiswa}</strong> | NISN:{' '}
+                Guru: <strong className="text-emerald-300">{previewRecap.namaSiswa}</strong> | NIP:{' '}
                 <strong className="text-teal-300">{previewRecap.nisn}</strong>
               </p>
 

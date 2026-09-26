@@ -174,7 +174,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
     e.preventDefault();
 
     if (!studentId) {
-      alert('Silakan pilih siswa terlebih dahulu.');
+      alert('Silakan pilih guru terlebih dahulu.');
       return;
     }
 
@@ -333,20 +333,20 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
     const rows = recapData.map((item, idx) => ({
       No: idx + 1,
       NIS: item.student.nis,
-      'Nama Siswa': item.student.name,
+      'Nama Guru': item.student.name,
       Kelas: item.student.classRoom,
       'Jenis Kelamin': item.student.gender,
       'Total Skor Karakter': item.stats.totalPoints,
       'Catatan Positif (+)': item.stats.positiveCount,
       'Catatan Pelanggaran (-)': item.stats.negativeCount,
-      'Predikat Sikap Rapor': item.predicate,
+      'Predikat Sikap': item.predicate,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Rekap Karakter');
 
-    const fileName = `Jurnal_Karakter_Siswa_${selectedClass}_${todayStr}.xlsx`;
+    const fileName = `Jurnal_Kedisiplinan_Guru_${selectedClass}_${todayStr}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
 
@@ -362,13 +362,13 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base sm:text-lg">Jurnal & Poin Kedisiplinan Siswa</h3>
+                <h3 className="font-extrabold text-base sm:text-lg">Jurnal & Kedisiplinan Guru</h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-amber-700 uppercase">
-                  Evaluasi Rapor
+                  Evaluasi Kinerja
                 </span>
               </div>
               <p className="text-xs text-amber-100">
-                Pencatatan perkembangan karakter, poin kebaikan, dan kedisiplinan siswa
+                Pencatatan perkembangan kinerja, catatan kedisiplinan guru & tendik
               </p>
             </div>
           </div>
@@ -477,7 +477,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                 <div className="space-y-1.5 md:col-span-2">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <i className="fa-solid fa-user-graduate text-amber-600"></i>
-                    <span>Pilih Siswa *</span>
+                    <span>Pilih Guru *</span>
                   </label>
                   <select
                     value={studentId}
@@ -485,7 +485,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     required
                     className="w-full text-xs font-semibold px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="">-- Pilih Siswa --</option>
+                    <option value="">-- Pilih Guru --</option>
                     {filteredStudents.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.nis}) - {formatClassLabel(s.classRoom)}
@@ -604,7 +604,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Tuliskan detail kejadian atau saran pembinaan untuk siswa..."
+                    placeholder="Tuliskan detail catatan evaluasi atau pembinaan untuk guru..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full text-xs font-semibold p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500"
@@ -666,7 +666,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input
                       type="text"
-                      placeholder="Cari siswa atau catatan..."
+                      placeholder="Cari guru atau catatan..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-8 pr-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
@@ -805,7 +805,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     </select>
                   )}
                   <span className="text-xs text-slate-500 font-semibold">
-                    Total: {recapData.length} Siswa
+                    Total: {recapData.length} Guru
                   </span>
                 </div>
 
@@ -825,7 +825,7 @@ export const StudentBehaviorModal: React.FC<StudentBehaviorModalProps> = ({
                     <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
                       <tr>
                         <th className="py-3 px-4">No</th>
-                        <th className="py-3 px-4">Nama Siswa</th>
+                        <th className="py-3 px-4">Nama Guru</th>
                         <th className="py-3 px-4">Kelas</th>
                         <th className="py-3 px-4 text-center">Catatan (+)</th>
                         <th className="py-3 px-4 text-center">Catatan (-)</th>
