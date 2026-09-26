@@ -154,14 +154,14 @@ export function findHomeroomTeacher(
       return {
         name: adminOrCoord.name,
         nip: formatCleanNIP(adminOrCoord.nip),
-        classLabel: 'Koordinator Presensi / Kesiswaan',
+        classLabel: 'Koordinator Presensi / Kepegawaian',
         isFound: true,
       };
     }
     return {
       name: '( ........................................ )',
       nip: 'NIP. ............................',
-      classLabel: 'Wali Kelas / Koordinator Presensi',
+      classLabel: 'Koordinator Presensi PTK',
       isFound: false,
     };
   }

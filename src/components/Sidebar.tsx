@@ -18,6 +18,7 @@ interface SidebarProps {
   onOpenERaporSync?: () => void;
   onShareLink?: () => void;
   onOpenRetroactiveAttendance?: () => void;
+  onOpenTeacherListPrint?: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
 }
@@ -37,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAnnouncement,
   onShareLink,
   onOpenRetroactiveAttendance,
+  onOpenTeacherListPrint,
   isOpenMobile = false,
   onCloseMobile,
 }) => {
@@ -59,6 +61,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Input Data Guru & ID Card',
       icon: 'fa-solid fa-id-card-clip',
       badge: null,
+    },
+    {
+      id: 'print_teacher_list' as const,
+      label: 'Cetak Daftar Guru',
+      icon: 'fa-solid fa-file-invoice',
+      badge: 'A4 RESMI',
+      badgeClass: 'bg-emerald-400 text-slate-950 font-black',
+      isAction: true,
     },
     {
       id: 'retroactive_action' as const,
@@ -143,7 +153,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   type="button"
                   onClick={() => {
                     if (isAction) {
-                      if (onOpenRetroactiveAttendance) onOpenRetroactiveAttendance();
+                      if (item.id === 'print_teacher_list') {
+                        if (onOpenTeacherListPrint) onOpenTeacherListPrint();
+                      } else if (onOpenRetroactiveAttendance) {
+                        onOpenRetroactiveAttendance();
+                      }
                       if (onCloseMobile) onCloseMobile();
                     } else {
                       handleSelectTab(item.id as ActiveTab);
@@ -152,6 +166,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
                       ? 'bg-white text-red-900 shadow-md shadow-red-950/30 border border-white/60'
+                      : item.id === 'print_teacher_list'
+                      ? 'text-emerald-100 bg-emerald-700/40 hover:bg-emerald-700/60 border border-emerald-400/40 shadow-xs'
                       : isAction
                       ? 'text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40'
                       : 'text-red-100 hover:bg-red-800/60 hover:text-white'
@@ -160,7 +176,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex items-center gap-3">
                     <i
                       className={`${item.icon} text-sm w-4 text-center ${
-                        isActive ? 'text-red-700' : isAction ? 'text-amber-300' : 'text-red-200/80'
+                        isActive
+                          ? 'text-red-700'
+                          : item.id === 'print_teacher_list'
+                          ? 'text-emerald-300'
+                          : isAction
+                          ? 'text-amber-300'
+                          : 'text-red-200/80'
                       }`}
                     ></i>
                     <span>{item.label}</span>

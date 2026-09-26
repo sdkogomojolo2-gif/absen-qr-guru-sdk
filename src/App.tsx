@@ -40,6 +40,7 @@ import { DapodikAnnouncementModal, CURRENT_ANNOUNCEMENT_VERSION } from './compon
 import { ERaporSyncModal } from './components/ERaporSyncModal';
 import { MonthlyRecapTab } from './components/MonthlyRecapTab';
 import { RetroactiveAttendanceModal } from './components/RetroactiveAttendanceModal';
+import { TeacherListPrintModal } from './components/TeacherListPrintModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { testFirestoreConnection, setCustomIIHHBeresDatabaseId } from './firebase';
@@ -178,10 +179,14 @@ export default function App() {
       const parsed: Student[] = saved ? JSON.parse(saved) : INITIAL_STUDENTS;
       const deletedIds = getDeletedGuruIds();
 
-      const filtered = parsed.filter((s) => !isDummyGuruId(s.id) && !deletedIds.has(s.id));
+      const filtered = Array.isArray(parsed)
+        ? parsed.filter((s) => s && !isDummyGuruId(s.id) && !deletedIds.has(s.id))
+        : [];
+
+      const candidate = filtered.length > 0 ? filtered : INITIAL_STUDENTS;
 
       const seenIds = new Set<string>();
-      const sanitized = filtered.map((s, index) => {
+      const sanitized = candidate.map((s, index) => {
         let uniqueId = s.id;
         if (!uniqueId || seenIds.has(uniqueId)) {
           uniqueId = `std-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 8)}`;
@@ -323,6 +328,7 @@ export default function App() {
   const [isCloudSyncModalOpen, setIsCloudSyncModalOpen] = useState(false);
   const [isERaporSyncModalOpen, setIsERaporSyncModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isPrintTeacherListModalOpen, setIsPrintTeacherListModalOpen] = useState(false);
 
   // Retroactive Attendance Modal State (Absen Masa Lampau / Lupa Absen)
   const [isRetroactiveModalOpen, setIsRetroactiveModalOpen] = useState(false);
@@ -548,6 +554,11 @@ export default function App() {
           safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(merged));
           return merged;
         });
+      } else {
+        // Remote is empty, seed INITIAL_STUDENTS to Firestore so remote has the 10 PTK
+        if (INITIAL_STUDENTS.length > 0) {
+          syncAllStudentsToFirestore(INITIAL_STUDENTS).catch(console.warn);
+        }
       }
     }).catch(console.warn);
 
@@ -577,7 +588,22 @@ export default function App() {
       const deletedIds = getDeletedGuruIds();
       const validFs = fsStudents.filter((s) => !isDummyGuruId(s.id) && !deletedIds.has(s.id));
 
-      setStudents(() => {
+      setStudents((prev) => {
+        if (validFs.length === 0) {
+          // If Firestore collection has 0 valid documents:
+          // Keep local data or seed INITIAL_STUDENTS rather than wiping out
+          if (prev && prev.length > 0) {
+            syncAllStudentsToFirestore(prev).catch(console.warn);
+            return prev;
+          }
+          if (INITIAL_STUDENTS.length > 0) {
+            syncAllStudentsToFirestore(INITIAL_STUDENTS).catch(console.warn);
+            safeSetItem(LOCAL_STORAGE_KEYS.STUDENTS, JSON.stringify(INITIAL_STUDENTS));
+            return INITIAL_STUDENTS;
+          }
+          return [];
+        }
+
         const normalized = validFs.map((s) => ({
           ...s,
           schoolId: s.schoolId || DEFAULT_PRIMARY_SCHOOL_ID,
@@ -1709,6 +1735,7 @@ export default function App() {
             setRetroactiveInitialTeacherId(undefined);
             setIsRetroactiveModalOpen(true);
           }}
+          onOpenTeacherListPrint={() => setIsPrintTeacherListModalOpen(true)}
           isOpenMobile={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
@@ -1942,6 +1969,15 @@ export default function App() {
             }}
             schoolId={settings.schoolId}
             settings={settings}
+          />
+        )}
+
+        {/* Modal Cetak Daftar Guru & PTK Resmi */}
+        {isPrintTeacherListModalOpen && (
+          <TeacherListPrintModal
+            students={effectiveStudents}
+            settings={settings}
+            onClose={() => setIsPrintTeacherListModalOpen(false)}
           />
         )}
 

@@ -304,7 +304,7 @@ export interface MonthlyPDFReportOptions {
 
 /**
  * Generate Monthly Student Attendance Summary PDF Report
- * Columns: No, NIS, Nama Siswa, Kelas, L/P, Hadir (H), Terlambat (T), Sakit (S), Izin (I), Alfa (A), Total Kehadiran, % Hadir
+ * Columns: No, NIP, Nama Guru, Jabatan, L/P, Hadir (H), Terlambat (T), Sakit (S), Izin (I), Alfa (A), Total Kehadiran, % Hadir
  */
 export const generateMonthlyAttendancePDFReport = ({
   recaps,

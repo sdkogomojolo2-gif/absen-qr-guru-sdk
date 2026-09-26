@@ -411,7 +411,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
         : `ke database mandiri SD Inpres 2 Ulatan (koneksi lama Ogomojolo diputuskan)`;
 
       setSyncSuccessMessage(
-        `Berhasil mengirim rekap absensi (${res.count} guru) & data profil guru (${res.studentCount} guru) ${targetMsg}! Disimpan di koleksi 'rekap_absensi_ulatan', 'students', dan 'data_siswa' (ID Dokumen: NIP Guru).`
+        `Berhasil mengirim rekap absensi (${res.count} guru) & data profil guru (${res.studentCount} guru) ${targetMsg}! Disimpan di koleksi 'rekap_absensi_ogomojolo', 'guru_ptk', dan 'data_guru' (ID Dokumen: NIP Guru).`
       );
       if (onSuccessToast) {
         onSuccessToast(
@@ -1217,7 +1217,7 @@ export const ERaporSyncModal: React.FC<ERaporSyncModalProps> = ({
                       : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                   }`}
                 >
-                  2. Data Profil Guru (`data_siswa` / `students`)
+                  2. Data Profil Guru (`data_guru` / `guru_ptk`)
                 </button>
               </div>
 

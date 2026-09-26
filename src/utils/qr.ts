@@ -18,7 +18,7 @@ export const createKepsekSignatureQRPayload = (settings: Partial<SystemSettings>
  */
 export const createStudentQRPayload = (student: Student): string => {
   const payload: QRPayload = {
-    app: 'AbsensiSiswaQR',
+    app: 'PresensiGuruQR',
     nis: student.nis,
     name: student.name,
     classRoom: student.classRoom

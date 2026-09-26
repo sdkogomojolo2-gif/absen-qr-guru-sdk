@@ -4,7 +4,7 @@ import { StudentCardModal } from './StudentCardModal';
 import { BulkCardPrintModal } from './BulkCardPrintModal';
 import { TeacherListPrintModal } from './TeacherListPrintModal';
 import { MALE_BW_AVATAR, FEMALE_BW_AVATAR, getDefaultAvatar } from '../utils/avatars';
-import { SD_CLASSES } from '../data/initialData';
+import { SD_CLASSES, INITIAL_STUDENTS } from '../data/initialData';
 import { downloadStudentImportTemplateExcel, parseStudentExcelFile } from '../utils/excel';
 import { formatPhoneNumberForWA } from '../utils/whatsapp';
 import { isHomeroomClassMatch, formatClassLabel, findHomeroomTeacher } from '../utils/classUtils';
@@ -1077,16 +1077,30 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                             Belum Ada Data Guru & PTK
                           </h4>
                           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Data dummy telah dikosongkan. Silakan mulai input data guru asli Anda secara manual dengan tombol di bawah atau gunakan fitur Import Excel.
+                            Data guru masih kosong. Anda dapat langsung memuat 10 data guru & PTK resmi SDN Kecil Ogomojolo, menambah guru manual, atau mengunggah template Excel.
                           </p>
-                          <div className="pt-2">
+                          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onAddBulkStudents) {
+                                  onAddBulkStudents(INITIAL_STUDENTS);
+                                } else {
+                                  INITIAL_STUDENTS.forEach((g) => onAddStudent(g));
+                                }
+                              }}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all inline-flex items-center gap-1.5"
+                            >
+                              <i className="fa-solid fa-users text-xs"></i>
+                              <span>Muat 10 Guru Resmi SDN Kecil Ogomojolo</span>
+                            </button>
                             <button
                               type="button"
                               onClick={handleOpenAddForm}
-                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all inline-flex items-center gap-1.5"
+                              className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-all inline-flex items-center gap-1.5"
                             >
                               <i className="fa-solid fa-plus text-xs"></i>
-                              <span>Tambah Guru Pertama</span>
+                              <span>Tambah Guru Manual</span>
                             </button>
                           </div>
                         </>

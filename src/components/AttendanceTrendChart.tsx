@@ -33,7 +33,7 @@ interface DayTrendData {
   izinSakit: number;
   alpa: number;
   totalHadir: number;
-  totalSiswa: number;
+  totalGuru: number;
   attendanceRate: number;
   onTimeRate: number;
 }
@@ -116,7 +116,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
         izinSakit,
         alpa,
         totalHadir,
-        totalSiswa: totalClassStudents,
+        totalGuru: totalClassStudents,
         attendanceRate,
         onTimeRate,
       });
@@ -201,7 +201,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
           <div className="border-t border-slate-700/60 pt-1.5 flex items-center justify-between text-[11px] text-slate-400">
             <span>Total Kehadiran:</span>
             <span className="font-bold text-white font-mono">
-              {data.totalHadir} / {data.totalSiswa} guru
+              {data.totalHadir} / {data.totalGuru} guru
             </span>
           </div>
         </div>

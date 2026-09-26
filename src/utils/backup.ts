@@ -11,8 +11,8 @@ export const exportFullBackupJSON = (
   schools?: School[]
 ) => {
   const backupData = {
-    app: 'Aplikasi Absensi QR Code Siswa SD',
-    version: '1.0.0',
+    app: 'Aplikasi Presensi QR Code Guru & PTK',
+    version: '2.0.0',
     exportDate: new Date().toISOString(),
     schools: schools || [],
     students,
@@ -27,7 +27,7 @@ export const exportFullBackupJSON = (
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `Backup_Database_Absensi_SD_${dateStr}.json`);
+  link.setAttribute('download', `Backup_Database_Presensi_Guru_${dateStr}.json`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
