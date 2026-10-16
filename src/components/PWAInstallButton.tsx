@@ -219,7 +219,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 <ol className="list-decimal list-inside space-y-1 text-slate-400 pl-1 leading-relaxed">
                   <li>Lihat di sebelah kanan <strong>bilah alamat URL (Address Bar)</strong>.</li>
                   <li>Klik ikon <strong>Instal (Komputer dengan panah bawah / App Available)</strong>.</li>
-                  <li>Atau klik menu titik tiga browser &gt; pilih <strong>"Instal Presensi SDN Kecil Ogomojolo"</strong>.</li>
+                  <li>Atau klik menu titik tiga browser &gt; pilih <strong>"Instal ABSENSI GURU SD"</strong>.</li>
                   <li>Aplikasi akan berjalan di jendela mandiri tanpa tampilan browser.</li>
                 </ol>
               </div>

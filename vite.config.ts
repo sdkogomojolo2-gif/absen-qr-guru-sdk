@@ -17,9 +17,9 @@ export default defineConfig(() => {
         includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
-          name: 'Presensi SDN Kecil Ogomojolo',
-          short_name: 'QR Guru SDK',
-          description: 'Sistem Presensi QR Code Guru & Tenaga Kependidikan SDN Kecil Ogomojolo',
+          name: 'ABSENSI GURU SD',
+          short_name: 'ABSENSI GURU SD',
+          description: 'Sistem Presensi QR Code Guru & Tenaga Kependidikan SD',
           theme_color: '#8b101b',
           background_color: '#ffffff',
           display: 'standalone',
