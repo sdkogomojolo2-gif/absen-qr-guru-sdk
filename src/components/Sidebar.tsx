@@ -19,6 +19,7 @@ interface SidebarProps {
   onShareLink?: () => void;
   onOpenRetroactiveAttendance?: () => void;
   onOpenTeacherListPrint?: () => void;
+  onOpenCustomFirebase?: () => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
 }
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onShareLink,
   onOpenRetroactiveAttendance,
   onOpenTeacherListPrint,
+  onOpenCustomFirebase,
   isOpenMobile = false,
   onCloseMobile,
 }) => {
@@ -239,6 +241,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-red-700 text-white shrink-0 uppercase tracking-tight ml-1">
                 Wajib Sinkron
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenCustomFirebase) onOpenCustomFirebase();
+                if (onCloseMobile) onCloseMobile();
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-100 bg-[#700b13] hover:bg-[#5e0910] border border-amber-400/40 shadow-xs transition-all cursor-pointer group"
+              title="Hubungkan Firebase Cloud Milik Anda Sendiri (BYO Database)"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <i className="fa-solid fa-fire text-xs text-amber-400"></i>
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="truncate font-extrabold text-[11px] leading-tight text-white">Database Firebase Pribadi</div>
+                  <div className="text-[9px] text-amber-200/80 font-normal">Custom Cloud (BYO Database)</div>
+                </div>
+              </div>
+              <span className="text-[8.5px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 shrink-0 uppercase tracking-tight ml-1">
+                MANDIRI
               </span>
             </button>
           </div>

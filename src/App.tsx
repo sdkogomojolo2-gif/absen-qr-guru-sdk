@@ -41,6 +41,7 @@ import { ERaporSyncModal } from './components/ERaporSyncModal';
 import { MonthlyRecapTab } from './components/MonthlyRecapTab';
 import { RetroactiveAttendanceModal } from './components/RetroactiveAttendanceModal';
 import { TeacherListPrintModal } from './components/TeacherListPrintModal';
+import { CustomFirebaseModal } from './components/CustomFirebaseModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { testFirestoreConnection, setCustomIIHHBeresDatabaseId } from './firebase';
@@ -329,6 +330,7 @@ export default function App() {
   const [isERaporSyncModalOpen, setIsERaporSyncModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isPrintTeacherListModalOpen, setIsPrintTeacherListModalOpen] = useState(false);
+  const [isCustomFirebaseModalOpen, setIsCustomFirebaseModalOpen] = useState(false);
 
   // Retroactive Attendance Modal State (Absen Masa Lampau / Lupa Absen)
   const [isRetroactiveModalOpen, setIsRetroactiveModalOpen] = useState(false);
@@ -1736,6 +1738,7 @@ export default function App() {
             setIsRetroactiveModalOpen(true);
           }}
           onOpenTeacherListPrint={() => setIsPrintTeacherListModalOpen(true)}
+          onOpenCustomFirebase={() => setIsCustomFirebaseModalOpen(true)}
           isOpenMobile={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
@@ -1754,6 +1757,7 @@ export default function App() {
               setRetroactiveInitialTeacherId(undefined);
               setIsRetroactiveModalOpen(true);
             }}
+            onOpenCustomFirebase={() => setIsCustomFirebaseModalOpen(true)}
           />
 
           {/* Toast Notifications & PWA Offline Indicator */}
@@ -1898,6 +1902,30 @@ export default function App() {
             onUpdateTeacher={handleUpdateTeacher}
             onUpdateSettings={handleUpdateSettings}
             onClose={() => setIsAdminProfileModalOpen(false)}
+            onShowToast={addToast}
+            localData={{
+              schools,
+              students: effectiveStudents,
+              teachers: effectiveTeachers,
+              settings,
+              attendanceRecords: effectiveAttendance,
+            }}
+          />
+        )}
+
+        {/* Custom Firebase Cloud (BYO Database) Modal */}
+        {isCustomFirebaseModalOpen && (
+          <CustomFirebaseModal
+            isOpen={isCustomFirebaseModalOpen}
+            onClose={() => setIsCustomFirebaseModalOpen(false)}
+            onShowToast={addToast}
+            localData={{
+              schools,
+              students: effectiveStudents,
+              teachers: effectiveTeachers,
+              settings,
+              attendanceRecords: effectiveAttendance,
+            }}
           />
         )}
 

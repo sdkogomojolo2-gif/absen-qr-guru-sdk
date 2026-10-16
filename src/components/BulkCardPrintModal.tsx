@@ -559,6 +559,9 @@ export const BulkCardPrintModal: React.FC<BulkCardPrintModalProps> = ({
                   .card-item {
                     page-break-inside: avoid;
                     break-inside: avoid;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    box-shadow: none !important;
                   }
                   .printable-card-grid {
                     display: grid !important;

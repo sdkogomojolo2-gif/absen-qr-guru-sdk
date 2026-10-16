@@ -55,7 +55,51 @@ try {
   }
 }
 
-export const db = firestoreInstance;
+import {
+  getCustomFirestoreInstance,
+  isCustomFirebaseEnabled,
+  getStoredCustomFirebaseConfig,
+} from './services/customFirebaseService';
+
+export const defaultDb = firestoreInstance;
+
+/**
+ * Returns the currently active Firestore database:
+ * - If customer configured BYO Firebase Cloud database and it is active, returns customer's Firestore instance.
+ * - Otherwise returns the default applet Firestore instance.
+ */
+export function getActiveFirestoreDb() {
+  if (typeof window !== 'undefined' && isCustomFirebaseEnabled()) {
+    try {
+      const custom = getCustomFirestoreInstance();
+      if (custom) return custom;
+    } catch (err) {
+      console.warn('Fallback to defaultDb due to custom firestore error:', err);
+    }
+  }
+  return defaultDb;
+}
+
+/**
+ * Dynamic Proxy for db ensuring seamless backwards compatibility
+ * while automatically delegating all calls to the active Firestore database.
+ */
+export const db = new Proxy(firestoreInstance, {
+  get(_target, prop) {
+    const active = getActiveFirestoreDb();
+    const val = Reflect.get(active, prop, active);
+    return typeof val === 'function' ? val.bind(active) : val;
+  },
+  has(_target, prop) {
+    const active = getActiveFirestoreDb();
+    return Reflect.has(active, prop);
+  },
+  getPrototypeOf(_target) {
+    const active = getActiveFirestoreDb();
+    return Object.getPrototypeOf(active);
+  },
+});
+
 export const auth = getAuth(app);
 
 // Target Database ID for external e-Rapor Merdeka (empty by default; uses main database unless specified)

@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import {
   db,
+  getActiveFirestoreDb,
   getIIHHBeresFirestoreInstance,
   getCustomIIHHBeresDatabaseId,
   handleFirestoreError,
@@ -18,6 +19,11 @@ import {
 import { Student, AttendanceRecord, SystemSettings, Teacher, ScheduledLeave, BehaviorLog, ERaporRecapDoc, School } from '../types';
 import { CloudSyncPayload } from '../utils/cloudSync';
 import { INITIAL_SCHOOLS, DEFAULT_PRIMARY_SCHOOL_ID } from '../data/initialData';
+
+/**
+ * Returns the active Firestore database (BYO Customer database if enabled, otherwise default applet database)
+ */
+export const getDb = () => getActiveFirestoreDb();
 
 /**
  * Sanitizes an object by recursively stripping undefined values,
@@ -1000,4 +1006,56 @@ export async function fetchERaporStudentsFromFirestore(): Promise<any[]> {
     handleFirestoreError(error, OperationType.GET, path);
   }
 }
+
+/**
+ * Migrates and syncs all current local data (schools, teachers, students, settings, attendance)
+ * to the active cloud Firestore database.
+ */
+export async function syncAllLocalDataToCustomCloud(data: {
+  schools?: School[];
+  students: Student[];
+  teachers: Teacher[];
+  settings: SystemSettings;
+  attendanceRecords: AttendanceRecord[];
+}): Promise<{ success: boolean; count: number }> {
+  const activeDb = getActiveFirestoreDb();
+  const batch = writeBatch(activeDb);
+  let count = 0;
+
+  // 1. Settings
+  batch.set(doc(activeDb, COLLECTIONS.SETTINGS, 'school'), sanitizeForFirestore(data.settings), { merge: true });
+  if (data.settings.schoolId) {
+    batch.set(doc(activeDb, COLLECTIONS.SETTINGS, data.settings.schoolId), sanitizeForFirestore(data.settings), { merge: true });
+  }
+  count += 1;
+
+  // 2. Schools
+  if (data.schools && data.schools.length > 0) {
+    data.schools.forEach((sch) => {
+      batch.set(doc(activeDb, COLLECTIONS.SCHOOLS, sch.id), sanitizeForFirestore(sch), { merge: true });
+      count += 1;
+    });
+  }
+
+  // 3. Teachers & PTK
+  data.teachers.forEach((t) => {
+    batch.set(doc(activeDb, COLLECTIONS.TEACHERS, t.id), sanitizeForFirestore(t), { merge: true });
+    count += 1;
+  });
+
+  data.students.forEach((s) => {
+    batch.set(doc(activeDb, COLLECTIONS.STUDENTS, s.id), sanitizeForFirestore(s), { merge: true });
+    count += 1;
+  });
+
+  // 4. Attendance Records
+  data.attendanceRecords.forEach((att) => {
+    batch.set(doc(activeDb, COLLECTIONS.ATTENDANCE, att.id), sanitizeForFirestore(att), { merge: true });
+    count += 1;
+  });
+
+  await batch.commit();
+  return { success: true, count };
+}
+
 

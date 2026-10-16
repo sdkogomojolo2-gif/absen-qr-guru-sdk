@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Teacher, SystemSettings, WorkDaySchedule } from '../types';
+import { Teacher, SystemSettings, WorkDaySchedule, Student, AttendanceRecord, School } from '../types';
 import { compressLogoImage } from '../utils/imageCompressor';
 import { DEFAULT_DAILY_SCHEDULES } from '../utils/scheduleUtils';
 import { ParigiMoutongLogo } from './ParigiMoutongLogo';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
+import { CustomFirebaseSettings } from './CustomFirebaseSettings';
 
 interface AdminProfileModalProps {
   currentTeacher: Teacher;
@@ -11,6 +12,14 @@ interface AdminProfileModalProps {
   onUpdateTeacher: (updated: Teacher) => void;
   onUpdateSettings: (updated: SystemSettings) => void;
   onClose: () => void;
+  onShowToast?: (title: string, message: string, type: 'success' | 'warning' | 'error' | 'info') => void;
+  localData?: {
+    schools?: School[];
+    students: Student[];
+    teachers: Teacher[];
+    settings: SystemSettings;
+    attendanceRecords: AttendanceRecord[];
+  };
 }
 
 export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
@@ -19,6 +28,8 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
   onUpdateTeacher,
   onUpdateSettings,
   onClose,
+  onShowToast,
+  localData,
 }) => {
   // Admin Data Form
   const [name, setName] = useState(currentTeacher.name);
@@ -346,6 +357,9 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section: Database Cloud Pribadi (Firebase) - BYO Database */}
+          <CustomFirebaseSettings onShowToast={onShowToast} localData={localData} />
 
           {/* Section 2: Data Sekolah & Jadwal */}
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">

@@ -45,14 +45,14 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
   if (rawTpl === 'pelita') activeTemplate = 'modern_minimalis';
 
   const photoSrc = photoUrl || student.photo || student.avatarUrl;
-  const finalSchoolName = (settings.schoolName || 'SDK OGOMOJOLO').toUpperCase();
-  const schoolCity = settings.schoolCity || 'Tolitoli';
-  const schoolRegency = settings.schoolRegency || (settings.schoolCity ? `PEMERINTAH KABUPATEN ${settings.schoolCity.toUpperCase()}` : 'PEMERINTAH KABUPATEN TOLITOLI');
+  const finalSchoolName = (settings.schoolName || 'SDN KECIL OGOMOJOLO').toUpperCase();
+  const schoolCity = settings.schoolCity || 'Palasa';
+  const schoolRegency = settings.schoolRegency || 'PEMERINTAH KABUPATEN PARIGI MOUTONG';
   const schoolDepartment = settings.schoolDepartment || 'DINAS PENDIDIKAN DAN KEBUDAYAAN';
   
-  let cardTitle = settings.cardTitle || 'KARTU IDENTITAS GURU & PRESENSI DIGITAL';
-  if (/siswa|pelajar/i.test(cardTitle)) {
-    cardTitle = 'KARTU IDENTITAS GURU & PRESENSI DIGITAL';
+  let cardTitle = settings.cardTitle || 'KARTU IDENTITAS DAN PRESENSI DIGITAL';
+  if (/siswa|pelajar|guru & presensi/i.test(cardTitle)) {
+    cardTitle = 'KARTU IDENTITAS DAN PRESENSI DIGITAL';
   }
   
   let cardValidityText = settings.cardValidityText || 'KARTU RESMI GURU • BERLAKU SELAMA BERTUGAS';
@@ -60,8 +60,8 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
     cardValidityText = 'KARTU RESMI GURU • BERLAKU SELAMA BERTUGAS';
   }
 
-  const headmasterName = settings.headmasterName || 'Drs. H. Mulyadi, M.Pd';
-  const rawNip = settings.headmasterNip || '19680512 199403 1 005';
+  const headmasterName = settings.headmasterName || 'RAHMAT, S.Pd., M.Pd';
+  const rawNip = settings.headmasterNip || '19851204 200903 1 002';
   const headmasterNip = rawNip.startsWith('NIP') ? rawNip : `NIP. ${rawNip}`;
   const academicYear = settings.academicYear || '2025/2026';
 
@@ -120,10 +120,10 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
 
       {/* Card Header: Official Indonesian School Banner with Left Logo & Right School Logo */}
       <div
-        className={`${headerBgClass} text-white px-2.5 py-2 relative border-b-2 shadow-sm`}
+        className={`${headerBgClass} text-white px-2 py-2 relative border-b-2 shadow-sm`}
         style={{ borderColor: accentBorderColor }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Logo Kiri: Tut Wuri Handayani / Pemda */}
           <div className="shrink-0 p-0.5 bg-white/10 rounded-full border border-white/20">
             {settings.logoKabupatenUrl ? (
@@ -138,18 +138,18 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
             )}
           </div>
 
-          {/* Institutional Information */}
-          <div className="leading-tight min-w-0 flex-1">
-            <span className="text-[6.5px] font-semibold text-slate-200 uppercase tracking-wide block truncate">
+          {/* Institutional Information: All Pure White & Sized neatly matching 'PINDAI UNTUK PRESENSI' */}
+          <div className="leading-tight min-w-0 flex-1 text-center py-0.5">
+            <span className="text-[7.5px] font-bold text-white uppercase tracking-wider block leading-tight">
               {schoolRegency}
             </span>
-            <span className={`text-[7px] font-bold ${accentTextClass} uppercase tracking-wider block truncate`}>
+            <span className="text-[7.5px] font-bold text-white uppercase tracking-wider block leading-tight">
               {schoolDepartment}
             </span>
-            <h4 className="font-black text-[10px] tracking-wide text-white uppercase truncate leading-tight mt-0.5">
+            <h4 className="font-black text-[8.5px] tracking-widest text-white uppercase block leading-tight my-0.5">
               {finalSchoolName}
             </h4>
-            <span className="text-[7px] font-bold text-amber-300/90 uppercase tracking-tight block truncate">
+            <span className="text-[7.5px] font-black text-white uppercase tracking-wider block leading-tight">
               {cardTitle}
             </span>
           </div>
@@ -176,7 +176,7 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
                 title="Logo Sekolah"
               >
                 <i className="fa-solid fa-school text-emerald-800 text-[11px]"></i>
-                <span className="text-[5px] font-black text-emerald-950 leading-none">SDK</span>
+                <span className="text-[5px] font-black text-emerald-950 leading-none">SDN</span>
               </div>
             )}
           </div>
@@ -190,7 +190,7 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
           {/* Passport Photo 3:4 */}
           <div className="shrink-0">
             <div
-              className="w-[84px] h-[106px] rounded-lg overflow-hidden bg-slate-50 border-2 flex items-center justify-center shadow-sm relative"
+              className="w-[80px] h-[102px] rounded-lg overflow-hidden bg-slate-50 border-2 flex items-center justify-center shadow-xs relative"
               style={{ borderColor: accentBorderColor }}
             >
               {photoSrc ? (
@@ -206,8 +206,8 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-2 text-center">
                   <i className="fa-solid fa-user-tie text-2xl text-slate-400 mb-1"></i>
-                  <span className="text-[7.5px] font-bold text-slate-500 uppercase">FOTO GURU</span>
-                  <span className="text-[6.5px] text-slate-400">3 x 4 cm</span>
+                  <span className="text-[7.5px] font-bold text-slate-600 uppercase">FOTO GURU</span>
+                  <span className="text-[6.5px] text-slate-500">3 x 4 cm</span>
                 </div>
               )}
             </div>
@@ -215,49 +215,49 @@ export const StudentCardRenderer: React.FC<StudentCardRendererProps> = ({
 
           {/* Structured Biodata Table */}
           <div className="flex-1 min-w-0 text-left">
-            <div className="border-b border-slate-200 pb-1 mb-1">
-              <span className="text-[7px] font-bold text-slate-400 tracking-wider uppercase block">
-                NAMA GURU
+            <div className="border-b border-slate-300 pb-1 mb-1.5">
+              <span className="text-[7.5px] font-black text-slate-500 tracking-wider uppercase block">
+                NAMA GURU / PTK
               </span>
-              <h5 className={`font-black text-[10.5px] ${primaryTextClass} uppercase leading-tight line-clamp-2 tracking-tight`}>
+              <h5 className={`font-black text-[12px] sm:text-[13px] ${primaryTextClass} uppercase leading-tight line-clamp-2 tracking-tight`}>
                 {student.name}
               </h5>
             </div>
 
-            <div className="space-y-1 text-[8px] pt-0.5">
+            <div className="space-y-1.5 text-[9px] pt-0.5">
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[8px]">NIP</span>
-                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center">:</span>
-                <span className="font-mono font-bold text-slate-800 text-[8.5px] truncate flex-1 min-w-0" title={nipDisplay}>
+                <span className="w-[50px] shrink-0 text-slate-700 font-bold text-[9.5px]">NIP</span>
+                <span className="w-[8px] text-slate-900 font-black text-[9.5px] text-center">:</span>
+                <span className="font-mono font-bold text-slate-950 text-[10.5px] tracking-tight truncate flex-1 min-w-0" title={nipDisplay}>
                   {nipDisplay}
                 </span>
               </div>
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[8px]">NUPTK</span>
-                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center">:</span>
-                <span className="font-mono font-bold text-slate-800 text-[8.5px] truncate flex-1 min-w-0" title={nuptkDisplay}>
+                <span className="w-[50px] shrink-0 text-slate-700 font-bold text-[9.5px]">NUPTK</span>
+                <span className="w-[8px] text-slate-900 font-black text-[9.5px] text-center">:</span>
+                <span className="font-mono font-bold text-slate-950 text-[10.5px] tracking-tight truncate flex-1 min-w-0" title={nuptkDisplay}>
                   {nuptkDisplay}
                 </span>
               </div>
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[8px]">Jabatan</span>
-                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center">:</span>
-                <span className="font-bold text-slate-900 text-[8px] truncate flex-1 min-w-0" title={positionDisplay}>
+                <span className="w-[50px] shrink-0 text-slate-700 font-bold text-[9.5px]">Jabatan</span>
+                <span className="w-[8px] text-slate-900 font-black text-[9.5px] text-center">:</span>
+                <span className="font-bold text-slate-950 text-[9.5px] leading-tight truncate flex-1 min-w-0" title={positionDisplay}>
                   {positionDisplay}
                 </span>
               </div>
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[8px]">Status</span>
-                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center">:</span>
-                <span className="font-bold text-slate-800 text-[8px] truncate flex-1 min-w-0" title={employmentStatus}>
+                <span className="w-[50px] shrink-0 text-slate-700 font-bold text-[9.5px]">Status</span>
+                <span className="w-[8px] text-slate-900 font-black text-[9.5px] text-center">:</span>
+                <span className="font-bold text-slate-950 text-[9px] leading-tight truncate flex-1 min-w-0" title={employmentStatus}>
                   {employmentStatus}{student.rankGrade && student.rankGrade.trim() && student.rankGrade !== '-' ? ` (${student.rankGrade})` : ''}
                 </span>
               </div>
               <div className="flex items-baseline">
-                <span className="w-[66px] shrink-0 text-slate-500 font-medium text-[7.5px] leading-tight">Berlaku</span>
-                <span className="w-[8px] text-slate-400 font-bold text-[8px] text-center leading-tight">:</span>
-                <span className="font-semibold text-slate-700 text-[7px] leading-snug flex-1 min-w-0">
-                  selama menjabat disekolah ini
+                <span className="w-[50px] shrink-0 text-slate-700 font-bold text-[9px] leading-tight">Berlaku</span>
+                <span className="w-[8px] text-slate-900 font-black text-[9px] text-center leading-tight">:</span>
+                <span className="font-bold text-slate-900 text-[8.5px] leading-snug flex-1 min-w-0">
+                  selama bertugas di sekolah ini
                 </span>
               </div>
             </div>

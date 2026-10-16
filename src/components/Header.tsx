@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { PWAInstallButton } from './PWAInstallButton';
+import {
+  isCustomFirebaseEnabled,
+  getStoredCustomFirebaseConfig,
+  onCustomConfigChange,
+  CustomFirebaseConfig,
+} from '../services/customFirebaseService';
 
 interface HeaderProps {
   isDarkMode?: boolean;
@@ -8,6 +14,7 @@ interface HeaderProps {
   currentSchoolName?: string;
   onShareLink?: () => void;
   onOpenRetroactiveAttendance?: () => void;
+  onOpenCustomFirebase?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,8 +24,19 @@ export const Header: React.FC<HeaderProps> = ({
   currentSchoolName = 'SDK OGOMOJOLO',
   onShareLink,
   onOpenRetroactiveAttendance,
+  onOpenCustomFirebase,
 }) => {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [isCustomCloud, setIsCustomCloud] = useState<boolean>(() => isCustomFirebaseEnabled());
+  const [customConfig, setCustomConfig] = useState<CustomFirebaseConfig | null>(() => getStoredCustomFirebaseConfig());
+
+  useEffect(() => {
+    const unsub = onCustomConfigChange((enabled, cfg) => {
+      setIsCustomCloud(enabled);
+      setCustomConfig(cfg);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -80,6 +98,37 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2">
           {/* In-App PWA Install Button for mobile & desktop */}
           <PWAInstallButton variant="header" />
+
+          {/* Cloud Database Status Pill (Hijau = Terhubung ke Cloud Pribadi, Abu-abu = Mode Offline/Lokal) */}
+          <button
+            type="button"
+            onClick={onOpenCustomFirebase}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0 ${
+              isCustomCloud && customConfig
+                ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'
+            }`}
+            title={
+              isCustomCloud && customConfig
+                ? `Terhubung ke Cloud Pribadi (Project: ${customConfig.projectId}). Klik untuk membuka pengaturan.`
+                : 'Mode Offline / Lokal (Bawaan). Klik untuk menghubungkan Firebase milik sendiri.'
+            }
+          >
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                isCustomCloud && customConfig
+                  ? 'bg-emerald-500 animate-pulse'
+                  : 'bg-slate-400 dark:bg-slate-500'
+              }`}
+            ></span>
+            <span className="hidden sm:inline">
+              {isCustomCloud && customConfig ? 'Cloud Pribadi' : 'Mode Offline/Lokal'}
+            </span>
+            <span className="sm:hidden text-[11px]">
+              {isCustomCloud && customConfig ? 'Cloud' : 'Lokal'}
+            </span>
+            <i className={`fa-solid fa-cloud text-[11px] ${isCustomCloud && customConfig ? 'text-emerald-600' : 'text-slate-400'}`}></i>
+          </button>
 
           {onOpenRetroactiveAttendance && (
             <button

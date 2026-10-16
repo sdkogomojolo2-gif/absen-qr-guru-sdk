@@ -53,7 +53,7 @@ export const DEFAULT_SETTINGS: SystemSettings = {
   schoolCity: 'Palasa',
   schoolRegency: 'PEMERINTAH KABUPATEN PARIGI MOUTONG',
   schoolDepartment: 'DINAS PENDIDIKAN DAN KEBUDAYAAN',
-  cardTitle: 'KARTU IDENTITAS & PRESENSI DIGITAL GURU',
+  cardTitle: 'KARTU IDENTITAS DAN PRESENSI DIGITAL',
   cardValidityText: 'KARTU RESMI PENDIDIK & TENAGA KEPENDIDIKAN (PTK)',
   headmasterSignatureType: 'none',
   customHolidays: {

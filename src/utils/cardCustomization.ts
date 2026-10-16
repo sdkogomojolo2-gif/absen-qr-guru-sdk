@@ -343,14 +343,14 @@ export const drawCustomizedCardPDF = (
   if (rawTpl === 'nusantara') templateId = 'emerald_gold';
   if (rawTpl === 'pelita') templateId = 'modern_minimalis';
 
-  const finalSchoolName = (schoolName || settings?.schoolName || 'SD INPRES 2 ULATAN').toUpperCase();
-  const schoolCity = settings?.schoolCity || 'Paser';
-  const schoolRegency = settings?.schoolRegency || (schoolCity ? `PEMERINTAH KABUPATEN ${schoolCity.toUpperCase()}` : 'PEMERINTAH KABUPATEN PASER');
+  const finalSchoolName = (schoolName || settings?.schoolName || 'SDN KECIL OGOMOJOLO').toUpperCase();
+  const schoolCity = settings?.schoolCity || 'Palasa';
+  const schoolRegency = settings?.schoolRegency || 'PEMERINTAH KABUPATEN PARIGI MOUTONG';
   const schoolDepartment = settings?.schoolDepartment || 'DINAS PENDIDIKAN DAN KEBUDAYAAN';
 
-  let cardTitle = settings?.cardTitle || 'KARTU IDENTITAS GURU & PRESENSI DIGITAL';
-  if (/siswa|pelajar/i.test(cardTitle)) {
-    cardTitle = 'KARTU IDENTITAS GURU & PRESENSI DIGITAL';
+  let cardTitle = settings?.cardTitle || 'KARTU IDENTITAS DAN PRESENSI DIGITAL';
+  if (/siswa|pelajar|guru & presensi/i.test(cardTitle)) {
+    cardTitle = 'KARTU IDENTITAS DAN PRESENSI DIGITAL';
   }
 
   let cardValidityText = settings?.cardValidityText || 'KARTU RESMI GURU • BERLAKU SELAMA BERTUGAS';
@@ -358,8 +358,9 @@ export const drawCustomizedCardPDF = (
     cardValidityText = 'KARTU RESMI GURU • BERLAKU SELAMA BERTUGAS';
   }
 
-  const headmasterName = settings?.headmasterName || 'Drs. H. Mulyadi, M.Pd';
-  const headmasterNip = settings?.headmasterNip || '19680512 199403 1 005';
+  const headmasterName = settings?.headmasterName || 'RAHMAT, S.Pd., M.Pd';
+  const rawNip = settings?.headmasterNip || '19851204 200903 1 002';
+  const headmasterNip = rawNip.startsWith('NIP') ? rawNip : `NIP. ${rawNip}`;
   const academicYear = settings?.academicYear || '2025/2026';
 
   // Theme palettes: professional, elegant, neat
@@ -390,8 +391,8 @@ export const drawCustomizedCardPDF = (
   doc.roundedRect(x + cardWidth / 2 - 4.5, y + 0.8, 9, 1.5, 0.75, 0.75, 'FD');
 
   // 3. Top Header Banner
-  const headerTop = y + 2.8;
-  const headerHeight = 12.2;
+  const headerTop = y + 2.4;
+  const headerHeight = 16.2;
   doc.setFillColor(primary[0], primary[1], primary[2]);
   doc.rect(x, headerTop, cardWidth, headerHeight, 'F');
 
@@ -400,8 +401,8 @@ export const drawCustomizedCardPDF = (
     kabupatenLogoDataUrl ||
     (settings?.logoKabupatenUrl?.startsWith('data:image') ? settings.logoKabupatenUrl : undefined);
 
-  const leftLogoSize = 7.6;
-  const leftLogoX = x + 1.4;
+  const leftLogoSize = 8.0;
+  const leftLogoX = x + 1.2;
   const leftLogoY = headerTop + (headerHeight - leftLogoSize) / 2;
 
   if (finalKabLogo) {
@@ -419,33 +420,11 @@ export const drawCustomizedCardPDF = (
     drawTutWuriHandayaniPDF(doc, x + 5.2, headerTop + headerHeight / 2, 2.6, primary, gold);
   }
 
-  // Institution Header Texts
-  const rightLogoW = schoolLogoDataUrl ? 8.5 : 0;
-  const maxHeaderW = cardWidth - 11.5 - rightLogoW;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(2.8);
-  doc.setTextColor(241, 245, 249);
-  doc.text(schoolRegency, x + 9.5, headerTop + 2.8, { maxWidth: maxHeaderW });
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(2.7);
-  doc.setTextColor(gold[0], gold[1], gold[2]);
-  doc.text(schoolDepartment, x + 9.5, headerTop + 5.0, { maxWidth: maxHeaderW });
-
-  doc.setFontSize(4.8);
-  doc.setTextColor(255, 255, 255);
-  doc.text(finalSchoolName, x + 9.5, headerTop + 8.2, { maxWidth: maxHeaderW });
-
-  doc.setFontSize(3.0);
-  doc.setTextColor(gold[0], gold[1], gold[2]);
-  doc.text(cardTitle, x + 9.5, headerTop + 10.8, { maxWidth: maxHeaderW });
-
   // Draw School Logo on Right of Header if provided
   if (schoolLogoDataUrl) {
     try {
-      const logoBoxSize = 7.6;
-      const logoBoxX = x + cardWidth - logoBoxSize - 2.5;
+      const logoBoxSize = 8.0;
+      const logoBoxX = x + cardWidth - logoBoxSize - 1.2;
       const logoBoxY = headerTop + (headerHeight - logoBoxSize) / 2;
       doc.setFillColor(255, 255, 255);
       doc.setDrawColor(gold[0], gold[1], gold[2]);
@@ -457,16 +436,39 @@ export const drawCustomizedCardPDF = (
     }
   }
 
+  // Institution Header Texts - ALL PURE WHITE & PROPORTIONAL LIKE PINDAI UNTUK PRESENSI
+  const textCenterX = x + cardWidth / 2;
+  const maxHeaderW = cardWidth - 20.0;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+
+  // Line 1: PEMERINTAH KABUPATEN PARIGI MOUTONG
+  doc.setFontSize(3.8);
+  doc.text(schoolRegency, textCenterX, headerTop + 3.2, { align: 'center', maxWidth: maxHeaderW });
+
+  // Line 2: DINAS PENDIDIKAN DAN KEBUDAYAAN
+  doc.setFontSize(3.8);
+  doc.text(schoolDepartment, textCenterX, headerTop + 6.4, { align: 'center', maxWidth: maxHeaderW });
+
+  // Line 3: SDN KECIL OGOMOJOLO
+  doc.setFontSize(4.6);
+  doc.text(finalSchoolName, textCenterX, headerTop + 10.0, { align: 'center', maxWidth: maxHeaderW });
+
+  // Line 4: KARTU IDENTITAS DAN PRESENSI DIGITAL
+  doc.setFontSize(4.0);
+  doc.text(cardTitle, textCenterX, headerTop + 13.6, { align: 'center', maxWidth: maxHeaderW });
+
   // Metallic Ribbon Divider
   doc.setDrawColor(gold[0], gold[1], gold[2]);
   doc.setLineWidth(0.35);
   doc.line(x, headerTop + headerHeight, x + cardWidth, headerTop + headerHeight);
 
   // 4. Middle Section: Photo & Biodata
-  const photoX = x + 3.5;
-  const photoY = headerTop + headerHeight + 2.2;
-  const photoW = 17.5;
-  const photoH = 23.5; // Standard 3:4 passport aspect ratio
+  const photoX = x + 2.8;
+  const photoY = headerTop + headerHeight + 1.8;
+  const photoW = 15.5;
+  const photoH = 20.8; // Standard 3:4 passport aspect ratio
 
   // Photo Frame
   doc.setFillColor(248, 250, 252);
@@ -479,87 +481,113 @@ export const drawCustomizedCardPDF = (
     try {
       doc.addImage(photoSrc, 'JPEG', photoX + 0.35, photoY + 0.35, photoW - 0.7, photoH - 0.7);
     } catch {
-      doc.setFontSize(3.2);
-      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(3.4);
+      doc.setTextColor(100, 116, 139);
       doc.text('FOTO GURU', photoX + photoW / 2, photoY + photoH / 2, { align: 'center' });
     }
   } else {
-    doc.setFontSize(3.2);
-    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(3.4);
+    doc.setTextColor(100, 116, 139);
     doc.text('FOTO GURU', photoX + photoW / 2, photoY + photoH / 2, { align: 'center' });
   }
 
   // Biodata Column (Right of Photo)
-  const infoX = x + 23;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(3.0);
-  doc.setTextColor(100, 116, 139);
-  doc.text('NAMA GURU', infoX, photoY + 2.3);
+  const infoX = x + 19.8;
+  const maxInfoW = (x + cardWidth - 2.5) - infoX; // ~31.6 mm available
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(5.0);
+  doc.setFontSize(3.6);
+  doc.setTextColor(71, 85, 105); // Slate 600
+  doc.text('NAMA GURU / PTK', infoX, photoY + 2.2);
+
+  // Large, Bold & Clear Teacher Name
+  doc.setFont('helvetica', 'bold');
+  const nameLen = student.name.length;
+  const nameFontSize = nameLen > 28 ? 5.6 : nameLen > 21 ? 6.2 : 6.8;
+  doc.setFontSize(nameFontSize);
   doc.setTextColor(darkText[0], darkText[1], darkText[2]);
-  doc.text(student.name.toUpperCase(), infoX, photoY + 5.6, { maxWidth: 28 });
+  doc.text(student.name.toUpperCase(), infoX, photoY + 5.5, { maxWidth: maxInfoW });
 
-  // Subtle separator line
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.2);
-  doc.line(infoX, photoY + 8.8, x + cardWidth - 3.5, photoY + 8.8);
+  // Metallic Gold accent separator line
+  doc.setDrawColor(gold[0], gold[1], gold[2]);
+  doc.setLineWidth(0.25);
+  doc.line(infoX, photoY + 8.4, x + cardWidth - 2.5, photoY + 8.4);
 
-  // Data rows: NIP, NUPTK, Jabatan, Berlaku sampai
+  // Data rows: NIP, NUPTK, Jabatan, Status, Berlaku
   const nipDisplay = student.nip || student.nis || '-';
   const nuptkDisplay = student.nuptk || student.nisn || '-';
   const positionDisplay = student.position || student.subject || student.classRoom || 'Guru / PTK';
-  const validityDisplay = 'selama menjabat disekolah ini';
+  const rankDisplay = student.rankGrade && student.rankGrade.trim() && student.rankGrade !== '-' ? ` (${student.rankGrade})` : '';
+  const statusDisplay = `${student.employmentStatus || 'Guru Aktif'}${rankDisplay}`;
+  const validityDisplay = 'selama bertugas';
 
-  const labelW = 12.0;
+  const labelW = 8.5;
   const colonX = infoX + labelW;
-  const valX = colonX + 1.8;
-  const maxValW = (x + cardWidth - 3.5) - valX;
+  const valX = colonX + 1.2;
+  const maxValW = (x + cardWidth - 2.5) - valX; // ~21.9 mm available
 
   // Row 1: NIP
-  doc.setFontSize(3.6);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('NIP', infoX, photoY + 12.0);
-  doc.text(':', colonX, photoY + 12.0);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkText[0], darkText[1], darkText[2]);
-  doc.text(nipDisplay, valX, photoY + 12.0, { maxWidth: maxValW });
+  doc.setFontSize(4.5);
+  doc.setTextColor(51, 65, 85); // Slate 700
+  doc.text('NIP', infoX, photoY + 11.4);
+  doc.setTextColor(15, 23, 42);
+  doc.text(':', colonX, photoY + 11.4);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(4.9);
+  doc.setTextColor(15, 23, 42); // Solid dark text
+  doc.text(nipDisplay, valX, photoY + 11.4, { maxWidth: maxValW });
 
   // Row 2: NUPTK
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('NUPTK', infoX, photoY + 15.2);
-  doc.text(':', colonX, photoY + 15.2);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkText[0], darkText[1], darkText[2]);
-  doc.text(nuptkDisplay, valX, photoY + 15.2, { maxWidth: maxValW });
+  doc.setFontSize(4.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('NUPTK', infoX, photoY + 14.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(':', colonX, photoY + 14.5);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(4.9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(nuptkDisplay, valX, photoY + 14.5, { maxWidth: maxValW });
 
   // Row 3: Jabatan
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('Jabatan', infoX, photoY + 18.4);
-  doc.text(':', colonX, photoY + 18.4);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkText[0], darkText[1], darkText[2]);
-  doc.text(positionDisplay, valX, photoY + 18.4, { maxWidth: maxValW });
+  doc.setFontSize(4.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Jabatan', infoX, photoY + 17.6);
+  doc.setTextColor(15, 23, 42);
+  doc.text(':', colonX, photoY + 17.6);
+  doc.setFontSize(positionDisplay.length > 22 ? 4.2 : 4.6);
+  doc.setTextColor(15, 23, 42);
+  doc.text(positionDisplay, valX, photoY + 17.6, { maxWidth: maxValW });
 
-  // Row 4: Berlaku sampai
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('Berlaku sampai', infoX, photoY + 21.6);
-  doc.text(':', colonX, photoY + 21.6);
+  // Row 4: Status
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(3.0);
-  doc.setTextColor(darkText[0], darkText[1], darkText[2]);
-  doc.text(validityDisplay, valX, photoY + 21.6, { maxWidth: maxValW });
+  doc.setFontSize(4.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Status', infoX, photoY + 20.7);
+  doc.setTextColor(15, 23, 42);
+  doc.text(':', colonX, photoY + 20.7);
+  doc.setFontSize(statusDisplay.length > 22 ? 4.1 : 4.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(statusDisplay, valX, photoY + 20.7, { maxWidth: maxValW });
+
+  // Row 5: Berlaku
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(4.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Berlaku', infoX, photoY + 23.7);
+  doc.setTextColor(15, 23, 42);
+  doc.text(':', colonX, photoY + 23.7);
+  doc.setFontSize(4.3);
+  doc.setTextColor(15, 23, 42);
+  doc.text(validityDisplay, valX, photoY + 23.7, { maxWidth: maxValW });
 
   // 5. Middle Horizontal Divider
-  const midDividerY = photoY + photoH + 2.0;
-  doc.setDrawColor(226, 232, 240);
+  const midDividerY = photoY + 25.4;
+  doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.2);
-  doc.line(x + 3.5, midDividerY, x + cardWidth - 3.5, midDividerY);
+  doc.line(x + 2.8, midDividerY, x + cardWidth - 2.8, midDividerY);
 
   // 6. Lower Section: QR Code & Kepala Sekolah Pengesahan
   const signatureType = options.signatureType !== undefined
@@ -588,13 +616,13 @@ export const drawCustomizedCardPDF = (
 
     // Centered label below QR Code
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(3.8);
+    doc.setFontSize(4.2);
     doc.setTextColor(darkText[0], darkText[1], darkText[2]);
     doc.text('PINDAI UNTUK PRESENSI', x + cardWidth / 2, qrY + qrSize + 2.8, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(3.0);
-    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(3.6);
+    doc.setTextColor(51, 65, 85);
     doc.text(`ID GURU: ${nipDisplay}`, x + cardWidth / 2, qrY + qrSize + 5.5, { align: 'center' });
   } else {
     // Mode 2-Kolom: QR Presensi + Pengesahan Kepala Sekolah
@@ -698,7 +726,7 @@ export const drawCustomizedCardPDF = (
 
     // Headmaster Name (Underlined)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(4.0);
+    doc.setFontSize(4.3);
     doc.setTextColor(darkText[0], darkText[1], darkText[2]);
     doc.text(headmasterName, signCenterX, signBaseY + 13.0, { align: 'center' });
 
@@ -710,9 +738,9 @@ export const drawCustomizedCardPDF = (
     // Headmaster NIP
     const rawNip = headmasterNip || '-';
     const nipLabel = rawNip.startsWith('NIP') ? rawNip : `NIP. ${rawNip}`;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(3.0);
-    doc.setTextColor(100, 116, 139);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(3.3);
+    doc.setTextColor(51, 65, 85);
     doc.text(nipLabel, signCenterX, signBaseY + 16.2, { align: 'center' });
   }
 

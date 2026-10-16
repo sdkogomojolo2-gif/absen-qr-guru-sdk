@@ -7,6 +7,7 @@ import { googleSignIn, googleLogout, initAuth } from '../utils/googleAuth';
 import { createGoogleSpreadsheet, exportToGoogleSheets } from '../utils/googleSheets';
 import { safeSetItem, safeGetItem } from '../utils/storage';
 import { saveSQLiteDatabaseOnServer } from '../utils/sqliteClient';
+import { CustomFirebaseSettings } from './CustomFirebaseSettings';
 
 interface CloudSyncModalProps {
   students: Student[];
@@ -35,7 +36,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   onClose,
   onShowToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<'sync' | 'gsheets' | 'backup' | 'restore'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'custom_firebase' | 'gsheets' | 'backup' | 'restore'>('sync');
 
   // Google Sheets state
   const [googleUser, setGoogleUser] = useState<User | null>(null);
@@ -294,7 +295,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-5 animate-scale-up">
+      <div className={`bg-white border border-slate-200 rounded-3xl w-full p-6 shadow-2xl relative space-y-5 animate-scale-up transition-all ${activeTab === 'custom_firebase' ? 'max-w-3xl' : 'max-w-xl'}`}>
         {/* Close button */}
         <button
           onClick={onClose}
@@ -309,18 +310,18 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             <i className="fa-solid fa-cloud-arrow-up"></i>
           </div>
           <div>
-            <h3 className="text-lg font-black text-slate-900">Cloud Sync & Backup Lintas Perangkat</h3>
+            <h3 className="text-lg font-black text-slate-900">Cloud Sync & Database Mandiri</h3>
             <p className="text-xs text-slate-500">
-              Sinkronkan data ke Cloud, ekspor laporan Excel, dan amankan database sekolah.
+              Sinkronkan data ke Cloud, hubungkan Firebase pribadi, ekspor Google Sheets, dan cadangan lokal.
             </p>
           </div>
         </div>
 
         {/* Tab Selection */}
-        <div className="flex p-1 bg-slate-100 rounded-2xl gap-1 text-xs font-bold text-slate-600">
+        <div className="flex flex-wrap p-1 bg-slate-100 rounded-2xl gap-1 text-xs font-bold text-slate-600">
           <button
             onClick={() => setActiveTab('sync')}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[90px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'sync' ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
             }`}
           >
@@ -328,8 +329,17 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             <span>Sinkron Cloud</span>
           </button>
           <button
+            onClick={() => setActiveTab('custom_firebase')}
+            className={`flex-1 min-w-[110px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'custom_firebase' ? 'bg-amber-500 text-white shadow-xs' : 'hover:text-amber-800'
+            }`}
+          >
+            <i className="fa-solid fa-fire text-amber-300"></i>
+            <span>BYO Firebase</span>
+          </button>
+          <button
             onClick={() => setActiveTab('gsheets')}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[100px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'gsheets' ? 'bg-white text-emerald-600 shadow-xs' : 'hover:text-slate-900'
             }`}
           >
@@ -338,7 +348,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('backup')}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[95px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'backup' ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
             }`}
           >
@@ -347,7 +357,7 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('restore')}
-            className={`flex-1 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[85px] py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'restore' ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
             }`}
           >
@@ -355,6 +365,16 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
             <span>Restorasi</span>
           </button>
         </div>
+
+        {/* TAB CUSTOM FIREBASE MANDIRI */}
+        {activeTab === 'custom_firebase' && (
+          <div className="max-h-[65vh] overflow-y-auto pr-1">
+            <CustomFirebaseSettings
+              onShowToast={onShowToast}
+              localData={{ schools, students, teachers, settings, attendanceRecords }}
+            />
+          </div>
+        )}
 
         {/* TAB GOOGLE SHEETS */}
         {activeTab === 'gsheets' && (

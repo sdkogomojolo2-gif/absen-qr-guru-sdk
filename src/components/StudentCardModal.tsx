@@ -250,6 +250,13 @@ export const StudentCardModal: React.FC<StudentCardModalProps> = ({
                 padding: 0;
                 background: white !important;
               }
+              .card-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-shadow: none !important;
+              }
               .no-print {
                 display: none !important;
               }
